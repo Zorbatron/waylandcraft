@@ -1,4 +1,4 @@
-package dev.evvie;
+package dev.evvie.waylandcraft;
 
 import net.fabricmc.api.ClientModInitializer;
 

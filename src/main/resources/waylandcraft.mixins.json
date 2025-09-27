@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "dev.evvie.mixin",
+	"package": "dev.evvie.waylandcraft.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"ExampleMixin"

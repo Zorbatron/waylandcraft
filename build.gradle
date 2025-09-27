@@ -22,7 +22,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"wayland-craft" {
+		"waylandcraft" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}

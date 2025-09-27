@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "dev.evvie.mixin.client",
+	"package": "dev.evvie.waylandcraft.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"ExampleClientMixin"

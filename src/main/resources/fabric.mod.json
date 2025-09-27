@@ -1,31 +1,26 @@
 {
 	"schemaVersion": 1,
-	"id": "wayland-craft",
+	"id": "waylandcraft",
 	"version": "${version}",
 	"name": "WaylandCraft",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Woa Wayland",
 	"authors": [
-		"Me!"
+		"Evvie"
 	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
-	"license": "CC0-1.0",
-	"icon": "assets/wayland-craft/icon.png",
+	"icon": "assets/waylandcraft/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"dev.evvie.WaylandCraft"
+			"dev.evvie.waylandcraft.WaylandCraft"
 		],
 		"client": [
-			"dev.evvie.WaylandCraftClient"
+			"dev.evvie.waylandcraft.WaylandCraftClient"
 		]
 	},
 	"mixins": [
-		"wayland-craft.mixins.json",
+		"waylandcraft.mixins.json",
 		{
-			"config": "wayland-craft.client.mixins.json",
+			"config": "waylandcraft.client.mixins.json",
 			"environment": "client"
 		}
 	],
@@ -34,8 +29,5 @@
 		"minecraft": "~1.21.8",
 		"java": ">=21",
 		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
 	}
 }
