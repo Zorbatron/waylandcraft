@@ -197,7 +197,18 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		window.moveOrigin(parent.localToWorld(popup.offsetX, popup.offsetY, 0.05));
 	}
 	
+	private boolean inScreen = false;
+	
 	private void sendMotionEvents() {
+		boolean inScreenNow = Minecraft.getInstance().screen != null;
+		
+		// Send pointer moved outside window when a screen is opened
+		if(inScreenNow && !inScreen) bridge.sendMotionOutside();
+		inScreen = inScreenNow;
+		
+		// Don't send hitResult-based pointer updates when inside a screen
+		if(inScreen) return;
+		
 		if(hitResult != null) {
 			Vec3 coords = hitResult.surfaceLocal;
 			Window w = hitResult.target;
