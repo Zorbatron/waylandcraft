@@ -207,7 +207,11 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		}
 		
 		window.rotate(parent.normal(), parent.down());
-		window.moveOrigin(parent.localToWorld(popup.offsetX, popup.offsetY, 0.05));
+		
+		int x = popup.offsetX - popup.geometry.x() + parent.backing.geometry.x();
+		int y = popup.offsetY - popup.geometry.y() + parent.backing.geometry.y();
+		
+		window.moveOrigin(parent.localToWorld(x, y, 0.05));
 	}
 	
 	private boolean inScreen = false;

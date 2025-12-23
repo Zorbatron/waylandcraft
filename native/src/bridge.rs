@@ -5,7 +5,7 @@ use smithay::{
     wayland::{
         shell::xdg::{
             ToplevelSurface, PopupSurface, XDG_POPUP_ROLE,
-            XdgPopupSurfaceData
+            XdgPopupSurfaceData, SurfaceCachedState
         },
         compositor::{
             SurfaceAttributes, BufferAssignment, with_states, SurfaceData,
@@ -907,6 +907,30 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_checkInputRegion<'l>(
             true
         }
     }) as jboolean
+}
+
+#[unsafe(no_mangle)]
+pub extern "system"
+fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_surfaceXDGGeometry<'l>(
+    env: JNIEnv<'l>,
+    _class: JClass<'l>,
+    handle: jlong
+) -> jarray {
+    let surface = jptr_to_wlsurface(handle);
+
+    let geometry: Option<[jint; 4]> = with_states(&surface, |states| {
+        let mut guard = states.cached_state.get::<SurfaceCachedState>();
+        guard
+            .current()
+            .geometry
+            .map(|r| [r.loc.x, r.loc.y, r.size.w, r.size.h])
+    });
+
+    if let Some(geometry) = geometry {
+        let array = env.new_int_array(4).unwrap();
+        env.set_int_array_region(&array, 0, &geometry).unwrap();
+        array.into_raw()
+    } else { std::ptr::null_mut() }
 }
 
 #[unsafe(no_mangle)]

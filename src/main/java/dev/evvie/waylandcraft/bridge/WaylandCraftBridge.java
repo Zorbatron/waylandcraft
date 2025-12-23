@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWNativeEGL;
 
 import dev.evvie.waylandcraft.BufferTexture.DmabufTexture;
+import dev.evvie.waylandcraft.bridge.WLCAbstractWindow.SurfaceGeometry;
 import net.minecraft.client.Minecraft;
 
 public class WaylandCraftBridge {
@@ -182,6 +183,7 @@ public class WaylandCraftBridge {
 			WLCToplevel toplevel = getOrCreateToplevel(handle);
 			WLCSurface root = toplevel.getSurfaceTree();
 			toplevel.lastChild = updateSurfaceTree(root);
+			updateGeometry(toplevel);
 		}
 		
 		// Create new popups when necessary
@@ -196,6 +198,7 @@ public class WaylandCraftBridge {
 			
 			WLCSurface root = popup.getSurfaceTree();
 			popup.lastChild = updateSurfaceTree(root);
+			updateGeometry(popup);
 		}
 		
 		// All surface trees have now been walked. Now delete all unvisited surfaces
@@ -233,6 +236,20 @@ public class WaylandCraftBridge {
 		
 		// Do client frame callbacks
 		sendFrame(instance);
+	}
+	
+	private void updateGeometry(WLCAbstractWindow window) {
+		int[] data = surfaceXDGGeometry(window.surface.getHandle());
+		SurfaceGeometry geometry;
+		
+		if(data == null) {
+			geometry = new SurfaceGeometry(0, 0, window.surface.width(), window.surface.height());
+		}
+		else {
+			geometry = new SurfaceGeometry(data[0], data[1], data[2], data[3]);
+		}
+		
+		window.geometry = geometry;
 	}
 	
 	private void calculateSubpos(WLCSurface surface) {
@@ -301,9 +318,10 @@ public class WaylandCraftBridge {
 	private static native String socket(long instance);
 	private static native void sendFrame(long instance);
 	
+	private static native void updateSurfaceData(long instance, WLCSurface surface);
+	
 	private static native long[] toplevels(long instance);
 	private static native long toplevelSurface(long instance, long handle);
-	private static native void updateSurfaceData(long instance, WLCSurface surface);
 	
 	private static native long[] popups(long instance);
 	private static native long popupSurface(long instance, long handle);
@@ -313,6 +331,11 @@ public class WaylandCraftBridge {
 	// Query popup local offset coordinates
 	// Returns two-element list containing x,y
 	private static native int[] popupOffset(long handle);
+	
+	// Query the xdg_surface window geometry of a toplevel or popup.
+	// handle should be the handle to the root WLCSurface
+	// Returns four-element array containing x,y,width,height which could be null
+	private static native int[] surfaceXDGGeometry(long handle);
 	
 	private static native long[] dmabufs(long instance);
 	

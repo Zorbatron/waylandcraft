@@ -54,6 +54,8 @@ public class WindowManagerScreen extends Screen {
 	}
 	
 	private void renderToplevel(GuiGraphics context, WLCToplevel toplevel, float x, float y, float scale) {
+		x -= toplevel.geometry.x() / scale;
+		y -= toplevel.geometry.y() / scale;
 		for(WLCSurface surface = toplevel.getSurfaceTree(); surface != null; surface = surface.getNextChild()) {
 			renderSurface(context, surface, x + surface.xSubpos / scale, y + surface.ySubpos / scale, scale);
 		}

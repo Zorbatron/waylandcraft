@@ -13,6 +13,8 @@ public abstract class WLCAbstractWindow {
 	@Nullable
 	protected WLCSurface lastChild;
 	
+	public SurfaceGeometry geometry;
+	
 	public WLCAbstractWindow(long handle) {
 		this.handle = handle;
 	}
@@ -37,6 +39,9 @@ public abstract class WLCAbstractWindow {
 	
 	public WLCSurface getSurfaceTreeLast() {
 		return this.lastChild;
+	}
+	
+	public static record SurfaceGeometry(int x, int y, int width, int height) {
 	}
 	
 }
