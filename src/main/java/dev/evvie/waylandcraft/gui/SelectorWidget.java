@@ -1,7 +1,7 @@
 package dev.evvie.waylandcraft.gui;
 
 import java.awt.Color;
-import java.util.stream.Stream;
+import java.util.ArrayList;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -19,37 +19,58 @@ import net.minecraft.resources.ResourceLocation;
 
 public abstract class SelectorWidget<T> extends AbstractWidget {
 	
-	private SelectorButton<T>[] buttons;
-	private int count = 0;
+	private ArrayList<SelectorButton<T>> buttons = new ArrayList<SelectorButton<T>>();
 	
 	// Currently selected element, should always be either null or an element assigned to a button
 	private T selected = null;
 	
+	private int unrestrictedButtonWidth;
+	
 	@SuppressWarnings("unchecked")
-	public SelectorWidget(int x, int y, int buttonWidth, int buttonHeight, int maxCount) {
-		super(x, y, buttonWidth * maxCount, buttonHeight, Component.empty());
+	public SelectorWidget(int x, int y, int width, int height) {
+		super(x, y, width, height, Component.empty());
 		
-		if(maxCount < 1) throw new IllegalArgumentException("SelectorWidget maxCount < 1");
-		
-		buttons = new SelectorButton[maxCount];
-		for(int i = 0; i < buttons.length; i++) {
-			buttons[i] = new SelectorButton<T>(this, x + buttonWidth * i, y, buttonWidth, buttonHeight, i);
-		}
+		unrestrictedButtonWidth = width / 5;
+		setEntries((T[]) new Object[0]);
 	}
 	
 	public void setEntries(T[] entries) {
-		count = Math.min(entries.length, buttons.length);
+		buttons.clear();
 		
-		for(int i = 0; i < count; i++) {
-			buttons[i].element = entries[i];
+		int x = getX();
+		int y = getY();
+		int height = getHeight();
+		
+		for(int i = 0; i < entries.length; i++) {
+			SelectorButton<T> button = new SelectorButton<T>(this, x, y, unrestrictedButtonWidth, height);
+			button.element = entries[i];
+			buttons.add(button);
 		}
 		
 		if(entries.length == 0) {
-			buttons[0].element = null;
-			count = 1;
+			SelectorButton<T> button = new SelectorButton<T>(this, x, y, unrestrictedButtonWidth, height);
+			button.element = null;
+			buttons.add(button);
 		}
 		
 		selectionCheck();
+		arrangeButtons();
+	}
+	
+	private void arrangeButtons() {
+		int buttonWidth = unrestrictedButtonWidth;
+		int x = getX();
+		int y = getY();
+		int height = getHeight();
+		
+		for(int i = 0; i < buttons.size(); i++) {
+			SelectorButton<T> button = buttons.get(i);
+			button.setX(x);
+			button.setY(y);
+			button.setWidth(buttonWidth);
+			button.setHeight(height);
+			x += unrestrictedButtonWidth;
+		}
 	}
 	
 	public abstract Component titleForElement(T element);
@@ -62,7 +83,7 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 	
 	// Maintains selected element property
 	private void selectionCheck() {
-		if(!Stream.of(buttons).anyMatch((b) -> b.element == selected)) {
+		if(!buttons.stream().anyMatch((b) -> b.element == selected)) {
 			selected = null;
 		}
 	}
@@ -74,11 +95,10 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 	
 	@Override
 	protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-		for(int i = 0; i < buttons.length; i++) {
-			SelectorButton<T> b = buttons[i];
+		for(int i = 0; i < buttons.size(); i++) {
+			SelectorButton<T> b = buttons.get(i);
 			
 			b.selected = b.element == selected;
-			b.visible = i < count;
 			
 			if(b.element != null) {
 				b.setMessage(titleForElement(b.element));
@@ -118,7 +138,7 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 		public BufferTexture icon = null;
 		
 		@SuppressWarnings("unchecked")
-		public SelectorButton(SelectorWidget<T> widget, int x, int y, int width, int height, int idx) {
+		public SelectorButton(SelectorWidget<T> widget, int x, int y, int width, int height) {
 			super(x, y, width, height, Component.empty(), (b) -> {widget.select(((SelectorButton<T>) b).element);}, (c) -> c.get());
 		}
 		
