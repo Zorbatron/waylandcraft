@@ -18,6 +18,7 @@ import com.mojang.math.Axis;
 import net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.client.renderer.texture.AbstractTexture;
@@ -40,6 +41,29 @@ public class RenderUtils {
 	// Similar to the built-in position_color_tex shader but doesn't discard low-alpha fragments
 	public static ShaderInstance getPositionColorTexShader() {
 		return POSITION_COLOR_TEX;
+	}
+	
+	public static void renderBufferGUI(GuiGraphics context, BufferTexture buf, float x, float y, float w, float h) {
+		Matrix4f mat = context.pose().last().pose();
+		
+		Tesselator tesselator = Tesselator.getInstance();
+		BufferBuilder vertexBuf = tesselator.getBuilder();
+		vertexBuf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+		vertexBuf.vertex(mat, x,     y,     0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(0, 0).endVertex();
+		vertexBuf.vertex(mat, x,     y + h, 0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(0, 1).endVertex();
+		vertexBuf.vertex(mat, x + w, y + h, 0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(1, 1).endVertex();
+		vertexBuf.vertex(mat, x + w, y,     0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(1, 0).endVertex();
+		
+		if(buf.format == BufferTexture.FORMAT_XRGB8888) {
+			RenderSystem.setShader(RenderUtils::getPositionColorTexShader);
+		}
+		else if(buf.format == BufferTexture.FORMAT_ARGB8888) {
+			RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+		}
+		
+		RenderSystem.setShaderTexture(0, buf.id);
+		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+		tesselator.end();
 	}
 	
 	public static Matrix4f cameraTransform(Camera camera) {

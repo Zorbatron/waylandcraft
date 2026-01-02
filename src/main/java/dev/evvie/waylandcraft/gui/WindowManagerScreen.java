@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -16,6 +17,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.evvie.waylandcraft.BufferTexture;
 import dev.evvie.waylandcraft.RenderUtils;
 import dev.evvie.waylandcraft.WaylandCraft;
+import dev.evvie.waylandcraft.XDGDesktopManager.IconData;
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
 import dev.evvie.waylandcraft.bridge.WLCPopup;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
@@ -80,6 +82,17 @@ public class WindowManagerScreen extends Screen {
 			@Override
 			public boolean elementDimColor(WLCToplevel element) {
 				return !wlc.hasWindowFor(element);
+			}
+			
+			@Override
+			public @Nullable BufferTexture iconForElement(WLCToplevel element) {
+				String appID = element.appID;
+				if(appID == null) return null;
+				
+				IconData icon = wlc.xdgManager.getIcon(appID);
+				if(icon == null) return null;
+				
+				return icon.texture;
 			}
 		};
 		addRenderableWidget(selector);

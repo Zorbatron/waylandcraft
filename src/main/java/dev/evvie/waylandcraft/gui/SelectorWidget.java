@@ -3,6 +3,10 @@ package dev.evvie.waylandcraft.gui;
 import java.awt.Color;
 import java.util.stream.Stream;
 
+import org.jetbrains.annotations.Nullable;
+
+import dev.evvie.waylandcraft.BufferTexture;
+import dev.evvie.waylandcraft.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -49,6 +53,7 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 	}
 	
 	public abstract Component titleForElement(T element);
+	public abstract @Nullable BufferTexture iconForElement(T element);
 	public abstract boolean elementDimColor(T element);
 	
 	public T selection() {
@@ -78,10 +83,12 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 			if(b.element != null) {
 				b.setMessage(titleForElement(b.element));
 				b.dimColor = elementDimColor(b.element);
+				b.icon = iconForElement(b.element);
 			}
 			else {
 				b.setMessage(Component.empty());
 				b.dimColor = false;
+				b.icon = null;
 			}
 			
 			b.render(guiGraphics, mouseX, mouseY, partialTicks);
@@ -108,6 +115,7 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 		public T element = null;
 		public boolean selected = false;
 		public boolean dimColor = false;
+		public BufferTexture icon = null;
 		
 		@SuppressWarnings("unchecked")
 		public SelectorButton(SelectorWidget<T> widget, int x, int y, int width, int height, int idx) {
@@ -132,7 +140,17 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 			
 			context.blitSprite(SPRITES.get(active, selected), x, y, width, height);
 			context.enableScissor(x + 2, y, x + width - 2, y + height);
-			context.drawString(font, getMessage(), x + 2, y + height / 2 - font.lineHeight / 2, color.getRGB());
+			
+			int xoff = x + 2;
+			int iconSize = height - 4;
+			
+			if(icon != null) {
+				RenderUtils.renderBufferGUI(context, icon, xoff, y + 2, iconSize, iconSize);
+				xoff += iconSize + 2;
+			}
+			
+			context.drawString(font, getMessage(), xoff, y + height / 2 - font.lineHeight / 2, color.getRGB());
+			
 			context.disableScissor();
 		}
 		

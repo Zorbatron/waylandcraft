@@ -4,17 +4,12 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
-import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.evvie.waylandcraft.Window.WindowHitResult;
 import dev.evvie.waylandcraft.XDGDesktopManager.IconData;
@@ -37,8 +32,6 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.phys.Vec3;
@@ -193,7 +186,7 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 				
 				if(appID != null) {
 					IconData icon = xdgManager.getIcon(appID);
-					if(icon != null) renderBuffer(context, icon.texture, x - font.lineHeight - 2, yoff, font.lineHeight, font.lineHeight);
+					if(icon != null) RenderUtils.renderBufferGUI(context, icon.texture, x - font.lineHeight - 2, yoff, font.lineHeight, font.lineHeight);
 				}
 				
 				yoff += ystep;
@@ -203,29 +196,6 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		CoreShaderRegistrationCallback.EVENT.register(context -> {
 			RenderUtils.registerShaders(context);
 		});
-	}
-	
-	private void renderBuffer(GuiGraphics context, BufferTexture buf, float x, float y, float w, float h) {
-		Matrix4f mat = context.pose().last().pose();
-		
-		Tesselator tesselator = Tesselator.getInstance();
-		BufferBuilder vertexBuf = tesselator.getBuilder();
-		vertexBuf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-		vertexBuf.vertex(mat, x,     y,     0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(0, 0).endVertex();
-		vertexBuf.vertex(mat, x,     y + h, 0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(0, 1).endVertex();
-		vertexBuf.vertex(mat, x + w, y + h, 0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(1, 1).endVertex();
-		vertexBuf.vertex(mat, x + w, y,     0).color(1.0f, 1.0f, 1.0f, 1.0f).uv(1, 0).endVertex();
-		
-		if(buf.format == BufferTexture.FORMAT_XRGB8888) {
-			RenderSystem.setShader(RenderUtils::getPositionColorTexShader);
-		}
-		else if(buf.format == BufferTexture.FORMAT_ARGB8888) {
-			RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
-		}
-		
-		RenderSystem.setShaderTexture(0, buf.id);
-		RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-		tesselator.end();
 	}
 	
 	public Window getOrCreateWindow(WLCToplevel toplevel) {
