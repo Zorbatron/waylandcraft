@@ -32,6 +32,7 @@ public class WindowManagerScreen extends Screen {
 	private Button grabButton;
 	private Button hideButton;
 	private Button resizeButton;
+	private Button stickyButton;
 	
 	private final int margin = 3;
 	private final int topMargin = 52;
@@ -106,9 +107,15 @@ public class WindowManagerScreen extends Screen {
 				.size(buttonWidth, buttonHeight)
 				.build();
 		
+		stickyButton = Button.builder(Component.literal("Sticky"), this::onStickyPressed)
+				.pos(margin, margin)
+				.size(buttonWidth, buttonHeight)
+				.build();
+		
 		addRenderableWidget(grabButton);
 		addRenderableWidget(hideButton);
 		addRenderableWidget(resizeButton);
+		addRenderableWidget(stickyButton);
 		
 		wlc.bridge.keyboardReset();
 	}
@@ -137,6 +144,13 @@ public class WindowManagerScreen extends Screen {
 		resizeWidth = focused.geometry.width();
 		resizeHeight = focused.geometry.height();
 		resizeLastX = resizeLastY = Double.NaN;
+	}
+	
+	private void onStickyPressed(Button button) {
+		if(focused == null) return;
+		
+		if(wlc.stickyToplevel != focused) wlc.stickyToplevel = focused;
+		else wlc.stickyToplevel = null;
 	}
 	
 	private void exitResizeMode() {
@@ -226,11 +240,15 @@ public class WindowManagerScreen extends Screen {
 			grabButton.active = true;
 			hideButton.active = wlc.hasWindowFor(focused);
 			resizeButton.active = true;
+			stickyButton.active = true;
+			stickyButton.setMessage(Component.literal(wlc.stickyToplevel == focused ? "Unsticky" : "Sticky"));
 		}
 		else {
 			grabButton.active = false;
 			hideButton.active = false;
 			resizeButton.active = false;
+			stickyButton.active = false;
+			stickyButton.setMessage(Component.literal("Sticky"));
 		}
 	}
 	

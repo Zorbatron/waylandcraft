@@ -49,6 +49,9 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 	public boolean keyboardCaptured = false;
 	public Window grabbedWindow = null;
 	
+	public WLCToplevel stickyToplevel = null;
+	public float stickyToplevelScale = 0.0f;
+	
 	public XDGDesktopManager xdgManager = new XDGDesktopManager();
 	
 	public KeyMapping keyOpenScreen;
@@ -190,6 +193,15 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 				}
 				
 				yoff += ystep;
+			}
+			
+			if(stickyToplevel != null && !stickyToplevel.isAlive()) stickyToplevel = null;
+			if(stickyToplevel != null) {
+				SurfaceGeometry geometry = stickyToplevel.geometry;
+				
+				int size = 200;
+				stickyToplevelScale = size / (float) Math.max(geometry.width(), geometry.height());
+				RenderUtils.renderWindowGUI(context, stickyToplevel, -geometry.x() * stickyToplevelScale, -geometry.y() * stickyToplevelScale, stickyToplevelScale);
 			}
 		});
 		
