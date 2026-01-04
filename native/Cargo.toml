@@ -11,3 +11,4 @@ crate-type = [ "cdylib" ]
 smithay = { version = "0.7.0", default-features = false, features = [ "wayland_frontend", "backend_drm" ] }
 jni = "0.21.1"
 libc = { version = "0.2.176", default-features = false }
+xkbcommon = "0.8.0"

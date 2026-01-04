@@ -30,6 +30,7 @@ use smithay::{
                 wl_surface::WlSurface,
                 wl_buffer::WlBuffer,
                 wl_pointer::{ButtonState, Axis},
+                wl_keyboard::KeyState,
             },
         },
         wayland_protocols::xdg::shell::server::xdg_toplevel,
@@ -885,10 +886,9 @@ pub extern "system"
 fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_keyboardFocus<'l>(
     _env: JNIEnv<'l>,
     _class: JClass<'l>,
-    _ptr: jlong,
-    _handle: jlong
+    ptr: jlong,
+    handle: jlong
 ) {
-    /*
     let instance = jptr_to_instance(ptr);
     let toplevel: Option<ToplevelSurface> = if handle != 0 {
         Some(jptr_to_toplevel(handle).clone())
@@ -896,12 +896,10 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_keyboardFocus<'l>(
 
     let surface = toplevel.as_ref().map(|t| t.wl_surface().clone());
 
-    let keyboard = instance.state.seat.get_keyboard().unwrap();
-    keyboard.set_focus(
-        &mut instance.state,
-        surface,
-        SERIAL_COUNTER.next_serial()
-    );
+    match surface {
+        Some(s) => instance.state.seat.keyboard_focus(s),
+        None => instance.state.seat.keyboard_unfocus(),
+    };
 
     instance.state.xdg_state.toplevel_surfaces().iter().for_each(|t| {
         t.with_pending_state(|state| {
@@ -916,7 +914,6 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_keyboardFocus<'l>(
     instance.state.xdg_state.toplevel_surfaces().iter().for_each(|t| {
         t.send_pending_configure();
     });
-    */
 }
 
 #[unsafe(no_mangle)]
@@ -924,41 +921,20 @@ pub extern "system"
 fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_keyboardInput<'l>(
     _env: JNIEnv<'l>,
     _class: JClass<'l>,
-    _ptr: jlong,
-    _scancode: jint,
-    _action: jint
+    ptr: jlong,
+    scancode: jint,
+    action: jint
 ) {
-    /*
     let instance = jptr_to_instance(ptr);
 
-    let scancode = Keycode::new(scancode as u32);
+    let scancode = scancode as u32;
     let action = match action {
         0 => KeyState::Released,
         1 => KeyState::Pressed,
         _ => {return;}
     };
 
-    let keyboard = instance.state.seat.get_keyboard().unwrap();
-    keyboard.input(
-        &mut instance.state,
-        scancode,
-        action,
-        SERIAL_COUNTER.next_serial(),
-        get_time(),
-        |_,_,_| keyboard::FilterResult::<()>::Forward
-    );
-    */
-}
-
-#[unsafe(no_mangle)]
-pub extern "system"
-fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_keyboardReset<'l>(
-    _env: JNIEnv<'l>,
-    _class: JClass<'l>,
-    _ptr: jlong
-) {
-    //let instance = jptr_to_instance(ptr);
-    //instance.state.seat.add_keyboard(XkbConfig::default(), 200, 25).unwrap();
+    instance.state.seat.keyboard_key(scancode, action);
 }
 
 #[unsafe(no_mangle)]
