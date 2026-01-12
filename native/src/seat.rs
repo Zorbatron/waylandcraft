@@ -309,6 +309,44 @@ impl WLCSeatState {
         });
     }
 
+    pub fn pointer_unlock(&self) {
+        self.for_all_pointers(|_pointer, data| {
+            if let Some(lock) = &mut data.lock {
+                if lock.active {
+                    lock.locked_pointer.unlocked();
+                }
+                lock.active = false;
+            }
+        });
+    }
+
+    pub fn pointer_lock(&self, surface: &WlSurface) -> bool {
+        for pointer in &self.pointers {
+            let mut locked = false;
+            with_pointer_data(pointer, |data| {
+                if let Some(lock) = &mut data.lock {
+                    if lock.surface == *surface {
+                        if !lock.active {
+                            lock.locked_pointer.locked();
+                            lock.active = true;
+                        }
+                        locked = true;
+                    } else {
+                        if lock.active {
+                            lock.locked_pointer.unlocked();
+                            lock.active = false;
+                        }
+                    }
+                }
+            });
+
+            if locked {
+                return true;
+            }
+        }
+        false
+    }
+
     fn for_all_pointers<F>(&self, mut f: F)
         where F: FnMut(&WlPointer, &mut WLCPointerData)
     {

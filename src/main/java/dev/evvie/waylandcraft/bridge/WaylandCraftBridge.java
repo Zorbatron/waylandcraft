@@ -311,6 +311,14 @@ public class WaylandCraftBridge {
 		pointerLeave(instance);
 	}
 	
+	public boolean maybeLockPointer(WLCSurface surface) {
+		return maybePointerLock(instance, surface.getHandle());
+	}
+	
+	public void unlockPointer() {
+		pointerUnlock(instance);
+	}
+	
 	public void sendButton(int button, int state) {
 		pointerButton(instance, button, state);
 	}
@@ -426,6 +434,10 @@ public class WaylandCraftBridge {
 	
 	// Send relative pointer motion to surface with pointer focus
 	private static native void pointerRelMotion(long instance, double dx, double dy);
+	
+	private static native boolean maybePointerLock(long instance, long handle);
+	
+	private static native void pointerUnlock(long instance);
 	
 	// Remove pointer focus from all surfaces
 	private static native void pointerLeave(long instance);

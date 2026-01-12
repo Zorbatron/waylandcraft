@@ -1,6 +1,7 @@
 package dev.evvie.waylandcraft.mixin;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,6 +20,14 @@ public class MouseHandlerMixin {
 	@Inject(method = "onScroll", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;player:Lnet/minecraft/client/player/LocalPlayer;", ordinal = 1), cancellable = true)
 	public void onScroll(long windowHandle, double scrollX, double scrollY, CallbackInfo info) {
 		if(WaylandCraft.instance.onScroll(windowHandle, scrollX, scrollY)) info.cancel();
+	}
+	
+	@Shadow public double accumulatedDX;
+	@Shadow public double accumulatedDY;
+	
+	@Inject(method = "turnPlayer", at = @At("HEAD"), cancellable = true)
+	public void onTurnPlayer(double timeDelta, CallbackInfo info) {
+		if(WaylandCraft.instance.onMouseTurn(accumulatedDX, accumulatedDY)) info.cancel();
 	}
 	
 }

@@ -858,6 +858,32 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_pointerRelMotion<'l>(
 
 #[unsafe(no_mangle)]
 pub extern "system"
+fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_maybePointerLock<'l>(
+    _env: JNIEnv<'l>,
+    _class: JClass<'l>,
+    ptr: jlong,
+    handle: jlong
+) -> jboolean {
+    let instance = jptr_to_instance(ptr);
+    let surface = jptr_to_wlsurface(handle);
+
+    instance.state.seat.pointer_lock(&surface) as jboolean
+}
+
+#[unsafe(no_mangle)]
+pub extern "system"
+fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_pointerUnlock<'l>(
+    _env: JNIEnv<'l>,
+    _class: JClass<'l>,
+    ptr: jlong
+) {
+    let instance = jptr_to_instance(ptr);
+
+    instance.state.seat.pointer_unlock()
+}
+
+#[unsafe(no_mangle)]
+pub extern "system"
 fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_pointerLeave<'l>(
     _env: JNIEnv<'l>,
     _class: JClass<'l>,

@@ -46,7 +46,10 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 	public WaylandCraftBridge bridge = null;
 	public ArrayList<WindowDisplay> displays = new ArrayList<WindowDisplay>();
 	public DisplayHitResult hitResult = null;
+	
 	public boolean keyboardCaptured = false;
+	public WLCSurface pointerGrab = null;
+	
 	public WindowDisplay grabbedDisplay = null;
 	
 	public WLCToplevel stickyToplevel = null;
@@ -261,6 +264,16 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		return true;
 	}
 	
+	/* Handle mouse being turned in game
+	 * Returns true when the mouse move has been consumed
+	 */
+	public boolean onMouseTurn(double dx, double dy) {
+		if(pointerGrab == null) return false;
+		
+		bridge.sendRelativeMotion(dx, dy);
+		return true;
+	}
+	
 	/* Handle mouse scroll input
 	 * Returns true when the mouse scroll action has been consumed
 	 */
@@ -353,9 +366,28 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		display.rotate(look.reverse(), up.reverse());
 	}
 	
+	private void checkPointerGrab(WLCSurface surface) {
+		if(grabbedDisplay != null || !keyboardCaptured || Minecraft.getInstance().screen != null) {
+			pointerGrab = null;
+			bridge.unlockPointer();
+			return;
+		}
+		
+		// Try to (re-)lock surface
+		if(bridge.maybeLockPointer(surface)) {
+			pointerGrab = surface;
+		}
+		else {
+			pointerGrab = null;
+		}
+	}
+	
 	private boolean inScreen = false;
 	
 	private void sendMotionEvents() {
+		if(pointerGrab != null) checkPointerGrab(pointerGrab);
+		if(pointerGrab != null) return;
+		
 		boolean inScreenNow = Minecraft.getInstance().screen != null;
 		
 		// Send pointer moved outside window when a screen is opened
@@ -363,7 +395,9 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		inScreen = inScreenNow;
 		
 		// Don't send hitResult-based pointer updates when inside a screen
-		if(inScreen) return;
+		if(inScreen) {
+			return;
+		}
 		
 		if(grabbedDisplay != null) {
 			bridge.sendMotionOutside();
@@ -397,6 +431,7 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 				
 				if(bridge.inputRegionContains(surface, rel.x, rel.y)) {
 					bridge.sendMotion(surface, rel.x, rel.y);
+					checkPointerGrab(surface);
 					return;
 				}
 			}
