@@ -1,11 +1,11 @@
 {
 	"schemaVersion": 1,
 	"id": "waylandcraft",
-	"version": "${version}",
+	"version": "1.0.0",
 	"name": "WaylandCraft",
-	"description": "Woa Wayland",
+	"description": "Wayland Compositor in Minecraft",
 	"authors": [
-		"Evvie"
+		"EVV1E"
 	],
 	"icon": "assets/waylandcraft/icon.png",
 	"environment": "*",
