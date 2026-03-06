@@ -41,8 +41,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -277,7 +275,7 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 			RenderUtils.registerShaders(context);
 		});
 		
-		ServerTickEvents.END_WORLD_TICK.register(level -> {
+		ServerTickEvents.START_WORLD_TICK.register(level -> {
 			if(bridge == null) return;
 			
 			level.players().forEach(player -> {
@@ -294,7 +292,6 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 					if(WindowItem.getToplevel(item) != null) continue;
 					
 					inv.setItem(i, ItemStack.EMPTY);
-					level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GENERIC_BURN, SoundSource.BLOCKS);
 				}
 			});
 			bridge.newToplevels.clear();
@@ -312,7 +309,6 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 							double dz = ((level.random.nextDouble() * 2) - 1) * 0.15;
 							Minecraft.getInstance().level.addParticle(ParticleTypes.FLAME, e.getX(), e.getY(), e.getZ(), dx, dy, dz);
 						}
-						level.playSound(null, e.getX(), e.getY(), e.getZ(), SoundEvents.GENERIC_BURN, SoundSource.BLOCKS);
 						e.discard();
 					});
 		});
