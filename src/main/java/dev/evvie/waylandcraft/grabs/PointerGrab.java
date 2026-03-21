@@ -1,0 +1,37 @@
+package dev.evvie.waylandcraft.grabs;
+
+import dev.evvie.waylandcraft.WaylandCraft;
+import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
+import dev.evvie.waylandcraft.bridge.WLCSurface;
+import net.minecraft.world.phys.Vec3;
+
+public abstract class PointerGrab {
+	
+	public final WaylandCraft wlc;
+	public final int button;
+	
+	public PointerGrab(int button) {
+		this.button = button;
+		this.wlc = WaylandCraft.instance;
+	}
+	
+	public void drop() throws GrabDroppedException {
+		throw new GrabDroppedException();
+	}
+	
+	// Forbid more pointer button interactions to start on other buttons
+	public abstract boolean exclusive();
+	
+	// Called when grab is first started
+	public abstract void init() throws GrabDroppedException;
+	
+	// Called when button is released
+	public abstract void release() throws GrabDroppedException;
+	
+	// Called every time the pointer is moved in the world. Arguments are world position and view vector
+	public abstract void moveWorld(Vec3 pos, Vec3 dir) throws GrabDroppedException;
+	
+	// Called every time the pointer is moved over a window, coordinates relative to window origin
+	public abstract void hover(WLCAbstractWindow window, WLCSurface surface, double x, double y) throws GrabDroppedException;
+	
+}

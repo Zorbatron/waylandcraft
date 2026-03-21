@@ -6,8 +6,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 import dev.evvie.waylandcraft.WaylandCraft;
-import dev.evvie.waylandcraft.WindowDisplay;
-import dev.evvie.waylandcraft.WindowDisplay.DisplayHitResult;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -25,38 +23,9 @@ public class GameRendererMixin {
 	@Redirect(method = "pick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;pick(Lnet/minecraft/world/entity/Entity;DDF)Lnet/minecraft/world/phys/HitResult;"))
 	public HitResult pick(GameRenderer renderer, Entity cameraEntity, double blockInteractRange, double entityInteractRange, float partialTicks) {
 		HitResult result = pick(cameraEntity, blockInteractRange, entityInteractRange, partialTicks);
-		
-		WaylandCraft.instance.hitResult = null;
-		
 		Vec3 pos = cameraEntity.getEyePosition(partialTicks);
-		Vec3 dir = cameraEntity.getViewVector(partialTicks);
 		
-		DisplayHitResult windowHit = null;
-		
-		for(WindowDisplay window : WaylandCraft.instance.displays) {
-			if(!window.isValid()) continue;
-			window.updateGeometry();
-			
-			DisplayHitResult h = window.intersect(pos, dir);
-			if(h == null) continue;
-			
-			if(windowHit == null || h.position.distanceToSqr(pos) < windowHit.position.distanceToSqr(pos)) {
-				windowHit = h;
-			}
-		}
-		
-		if(windowHit == null) return result;
-		
-		// Only check window hit up until block range
-		if(!windowHit.position.closerThan(pos, blockInteractRange)) return result;
-		
-		// Check if the window is closer than the normal result
-		if(windowHit.position.distanceToSqr(pos) < result.getLocation().distanceToSqr(pos)) {
-			WaylandCraft.instance.hitResult = windowHit;
-			
-			Vec3 diff = windowHit.position.subtract(pos);
-			return BlockHitResult.miss(windowHit.position, Direction.getNearest(diff), BlockPos.containing(windowHit.position));
-		}
+		if(WaylandCraft.instance.overridePickBlock) return BlockHitResult.miss(pos, Direction.DOWN, BlockPos.containing(pos));
 		
 		return result;
 	}

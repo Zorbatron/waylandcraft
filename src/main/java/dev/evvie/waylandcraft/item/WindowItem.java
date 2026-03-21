@@ -15,9 +15,13 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.level.Level;
 
 public class WindowItem extends Item {
 	
@@ -70,6 +74,17 @@ public class WindowItem extends Item {
 		Long handle = itemStack.get(WINDOW_HANDLE);
 		
 		if(handle != null) list.add(Component.literal("Handle 0x" + Long.toHexString(handle.longValue())).withStyle(ChatFormatting.GRAY));
+	}
+	
+	@Override
+	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand interactionHand) {
+		ItemStack item = player.getItemInHand(interactionHand);
+		WLCToplevel toplevel = getToplevel(item);
+		
+		if(toplevel == null) return InteractionResultHolder.pass(item);
+		
+		WaylandCraft.instance.getOrCreateDisplay(toplevel).anchorToEntity(player);
+		return InteractionResultHolder.sidedSuccess(item, level.isClientSide());
 	}
 	
 	public static ItemStack createItem(WLCToplevel toplevel) {

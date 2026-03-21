@@ -877,6 +877,19 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_pointerMotion<'l>(
     _env: JNIEnv<'l>,
     _class: JClass<'l>,
     ptr: jlong,
+    x: jdouble,
+    y: jdouble
+) {
+    let instance = jptr_to_instance(ptr);
+    instance.state.seat.pointer_motion(x, y);
+}
+
+#[unsafe(no_mangle)]
+pub extern "system"
+fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_pointerMotionFocus<'l>(
+    _env: JNIEnv<'l>,
+    _class: JClass<'l>,
+    ptr: jlong,
     handle: jlong,
     x: jdouble,
     y: jdouble
@@ -884,7 +897,7 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_pointerMotion<'l>(
     let instance = jptr_to_instance(ptr);
     let surface = jptr_to_wlsurface(handle);
 
-    instance.state.seat.pointer_motion(Some(surface.clone()), x, y);
+    instance.state.seat.pointer_motion_focus(Some(surface.clone()), x, y);
 }
 
 #[unsafe(no_mangle)]
@@ -935,7 +948,7 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_pointerLeave<'l>(
     ptr: jlong
 ) {
     let instance = jptr_to_instance(ptr);
-    instance.state.seat.pointer_motion(None, 0.0, 0.0);
+    instance.state.seat.pointer_motion_focus(None, 0.0, 0.0);
 }
 
 #[unsafe(no_mangle)]

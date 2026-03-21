@@ -37,7 +37,6 @@ use xkbcommon::xkb::{self, Keymap};
 
 pub struct WLCSeatState {
     pub pointers: Vec<WlPointer>,
-    pub pressed_buttons: Vec<u32>,
     pub keyboards: Vec<WlKeyboard>,
     pub keymap_file: SealedFile,
     pub xkb_context: xkb::Context,
@@ -123,7 +122,6 @@ impl WLCSeatState {
 
         WLCSeatState {
             pointers: vec![],
-            pressed_buttons: vec![],
             keyboards: vec![],
             keymap_file,
             xkb_context,
@@ -189,23 +187,31 @@ impl WLCSeatState {
         });
     }
 
-    // Set pointer focus on a surface and register movement
-    pub fn pointer_motion(&self, surface: Option<WlSurface>, x: f64, y: f64) {
+    // Focus the pointer on the given surface and register movement
+    pub fn pointer_motion_focus(
+        &mut self,
+        surface: Option<WlSurface>,
+        x: f64,
+        y: f64
+    ) {
         let surface = surface.filter(|s| s.is_alive());
 
-        if self.pressed_buttons.is_empty() {
-            self.pointer_focus(surface.as_ref(), x, y);
-        }
+        self.pointer_focus(surface.as_ref(), x, y);
+        if surface.is_none() { return }
 
-        let surface = match surface {
-            Some(s) => s,
-            None => { return },
-        };
+        self.pointer_motion(x, y);
+    }
 
+    pub fn pointer_motion(&mut self, x: f64, y: f64) {
         // Send motion events
         self.for_all_pointers(|pointer, data| {
+            // Remove pointer focus when the surface isn't alive anymore
+            if data.focus.as_ref().is_some_and(|s| !s.is_alive()) {
+                data.focus = None;
+            }
+
             // Pointer does not hold focus
-            if !self.pointer_focus_eq(data, &surface) { return }
+            if !data.focus.is_some() { return }
 
             pointer.motion(get_time(), x, y);
             self.pointer_frame(pointer);
@@ -229,14 +235,6 @@ impl WLCSeatState {
     }
 
     pub fn pointer_button(&mut self, button: u32, state: ButtonState) {
-        if state == ButtonState::Pressed {
-            if self.pressed_buttons.contains(&button) { return }
-            self.pressed_buttons.push(button);
-        } else {
-            if !self.pressed_buttons.contains(&button) { return }
-            self.pressed_buttons.retain(|b| *b != button);
-        }
-
         self.for_all_pointers(|pointer, data| {
             if !data.focus.is_some() { return }
 

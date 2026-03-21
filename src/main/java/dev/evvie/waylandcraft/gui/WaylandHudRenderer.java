@@ -32,11 +32,11 @@ public class WaylandHudRenderer {
 		int yoff = 30;
 		int ystep = font.lineHeight + 2;
 		
-		if(WaylandCraft.instance.keyboardCapture != null) {
-			String text = "KEYBOARD CAPTURED [PRESS F7]";
-			context.drawString(font, text, context.guiWidth() - font.width(text) - 10, yoff, Color.red.getRGB(), true);
-			yoff += ystep;
-		}
+//		if(WaylandCraft.instance.keyboardCapture != null) {
+//			String text = "KEYBOARD CAPTURED [PRESS F7]";
+//			context.drawString(font, text, context.guiWidth() - font.width(text) - 10, yoff, Color.red.getRGB(), true);
+//			yoff += ystep;
+//		}
 		
 		for(WLCToplevel toplevel : WaylandCraft.instance.bridge.getToplevels()) {
 			String appID = toplevel.appID;

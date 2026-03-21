@@ -1,11 +1,13 @@
 package dev.evvie.waylandcraft;
 
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3d;
 import org.joml.Vector3d;
 
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
@@ -105,25 +107,6 @@ public class WindowDisplay {
 		RenderUtils.drawCutoutColorlessQuad(ctx.camera(), window.framebuffer.getTexture(), tr, br, bl, tl, new Vec2(1, 0), new Vec2(1, 1), new Vec2(0, 1), new Vec2(0, 0));
 	}
 	
-	public WindowBounds calculateBounds() {
-		WindowBounds bounds = new WindowBounds();
-		WLCSurface surface;
-		
-		for(surface = window.getSurfaceTree(); surface != null; surface = surface.getNextChild()) {
-			int minX = surface.xSubpos;
-			int minY = surface.ySubpos;
-			int maxX = minX + surface.width();
-			int maxY = minY + surface.height();
-			
-			if(minX < bounds.minX) bounds.minX = minX;
-			if(minY < bounds.minY) bounds.minY = minY;
-			if(maxX > bounds.maxX) bounds.maxX = maxX;
-			if(maxY > bounds.maxY) bounds.maxY = maxY;
-		}
-		
-		return bounds;
-	}
-	
 	/* Transform absolute world coordinates to surface-local pixel coordinates relative to toplevel (0, 0)
 	 * 
 	 * The resulting vector is the (x, y) pixel location and the z value is the block distance normal to the plane.
@@ -147,7 +130,7 @@ public class WindowDisplay {
 		return new Vec3(result.x, result.y, result.z);
 	}
 	
-	/* Perform ray-window intersection
+	/* Perform ray-window plane intersection
 	 * `dir` must be normalized.
 	 */
 	public DisplayHitResult intersect(Vec3 pos, Vec3 dir) {
@@ -165,54 +148,78 @@ public class WindowDisplay {
 		Vec3 hitPos = pos.add(dir.scale(t));
 		Vec3 localCoords = worldToLocal(hitPos);
 		
-		WindowBounds bounds = calculateBounds();
+		WLCSurface hitSurface = null;
+		Vec3 localCoordsRelative = null;
 		
-		// Completely outside of window extent
-		if(!bounds.contains((int) localCoords.x, (int) localCoords.y)) return null;
+		for(WLCSurface surface = window.getSurfaceTreeLast(); surface != null; surface = surface.getPrevChild()) {
+			Vec3 rel = localCoords.subtract(surface.xSubpos, surface.ySubpos, 0);
+			
+			int width = surface.width();
+			int height = surface.height();
+			
+			if(rel.x < 0 || rel.y < 0 || rel.x > width || rel.y > height) {
+				continue;
+			}
+			
+			if(WaylandCraft.instance.bridge.inputRegionContains(surface, rel.x, rel.y)) {
+				hitSurface = surface;
+				localCoordsRelative = rel;
+				break;
+			}
+		}
 		
 		// Flip z-coordinate when on the window backside
 		double dist = t;
 		if(p2 > 0) dist *= -1;
 		
-		return new DisplayHitResult(this, hitPos, localCoords, dist);
+		return new DisplayHitResult(this, hitSurface, hitPos, localCoords, localCoordsRelative, dist);
 	}
 	
-	public static class WindowBounds {
+	public void anchorToEntity(Entity entity) {
+		Vec3 pos = WaylandCraftUtils.getPosition(entity);
+		Vec3 look = WaylandCraftUtils.getLookVector(entity);
+		Vec3 up = WaylandCraftUtils.getUpVector(entity);
 		
-		public int minX;
-		public int minY;
-		public int maxX;
-		public int maxY;
-		
-		public WindowBounds(int minX, int minY, int maxX, int maxY) {
-			this.minX = minX;
-			this.minY = minY;
-			this.maxX = maxX;
-			this.maxY = maxY;
-		}
-		
-		public WindowBounds() {
-			this(0, 0, 0, 0);
-		}
-		
-		public boolean contains(int x, int y) {
-			return x >= minX && x <= maxX && y >= minY && y <= maxY;
-		}
-		
+		this.pivot = pos.add(look.scale(2));
+		this.rotate(look.reverse(), up.reverse());
 	}
 	
 	public static class DisplayHitResult {
 		
+		// WindowDisplay that was raycasted
 		public final WindowDisplay target;
+		
+		// Surface that was hit, if any
+		public final @Nullable WLCSurface surface;
+		
+		// World position
 		public final Vec3 position;
-		public final Vec3 surfaceLocal;
+		
+		// Surface-local coordinates relative to WindowDisplay origin
+		public final Vec3 surfaceLocalOrigin;
+		
+		// Surface-local coordinates relative to hit surface. Always guaranteed to not be null, if `surface` is non-null.
+		public final @Nullable Vec3 surfaceLocalRelative;
+		
+		// Calculated distance
 		public final double dist;
 		
-		public DisplayHitResult(WindowDisplay target, Vec3 position, Vec3 surfaceLocal, double dist) {
+		public DisplayHitResult(WindowDisplay target, WLCSurface surface, Vec3 position, Vec3 surfaceLocalOrigin, Vec3 surfaceLocalRelative, double dist) {
 			this.target = target;
+			this.surface = surface;
 			this.position = position;
-			this.surfaceLocal = surfaceLocal;
+			this.surfaceLocalOrigin = surfaceLocalOrigin;
+			this.surfaceLocalRelative = surfaceLocalRelative;
 			this.dist = dist;
+		}
+		
+		public boolean isMiss() {
+			return surface == null;
+		}
+		
+		@Override
+		public String toString() {
+			return "{target=" + target + ", surface=" + surface + ", position=" + position + ", local=" + surfaceLocalOrigin + ", relative=" + surfaceLocalRelative + ", dist=" + dist + "}";
 		}
 		
 	}

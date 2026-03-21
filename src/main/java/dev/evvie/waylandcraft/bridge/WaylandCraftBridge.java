@@ -320,8 +320,12 @@ public class WaylandCraftBridge {
 		return checkInputRegion(surface.getHandle(), x, y);
 	}
 	
-	public void sendMotion(WLCSurface surface, double x, double y) {
-		pointerMotion(instance, surface.getHandle(), x, y);
+	public void sendMotion(double x, double y) {
+		pointerMotion(instance, x, y);
+	}
+	
+	public void sendMotionRefocus(WLCSurface surface, double x, double y) {
+		pointerMotionFocus(instance, surface.getHandle(), x, y);
 	}
 	
 	public void sendRelativeMotion(double dx, double dy) {
@@ -501,7 +505,10 @@ public class WaylandCraftBridge {
 	private static native boolean checkInputRegion(long surfaceHandle, double x, double y);
 	
 	// Create pointer motion event
-	private static native void pointerMotion(long instance, long handle, double x, double y);
+	private static native void pointerMotion(long instance, double x, double y);
+	
+	// Create pointer motion event
+	private static native void pointerMotionFocus(long instance, long handle, double x, double y);
 	
 	// Send relative pointer motion to surface with pointer focus
 	private static native void pointerRelMotion(long instance, double dx, double dy);

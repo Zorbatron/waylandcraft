@@ -57,9 +57,12 @@ public class WindowManagerScreen extends Screen {
 	private int guiScale;
 	
 	private WLCToplevel focused = null;
+	private WLCToplevel lastFocused = null;
 	
 	// All window elements currently displayed, sorted by depth from bottom-most (root) to top-most (last leaf)
-	private ArrayList<WindowElement> windows = new ArrayList<WindowElement>();
+	public ArrayList<WindowElement> windows = new ArrayList<WindowElement>();
+	
+	private ArrayList<Integer> pressedMouseButtons = new ArrayList<Integer>();
 	
 	public WindowManagerScreen(WaylandCraft wlc) {
 		super(Component.literal("Window Manager"));
@@ -147,7 +150,7 @@ public class WindowManagerScreen extends Screen {
 	private void onGrabPressed(Button button) {
 		if(focused == null) return;
 		
-		wlc.grabbedDisplay = wlc.getOrCreateDisplay(focused);
+		wlc.getOrCreateDisplay(focused).anchorToEntity(minecraft.player);;
 		this.onClose();
 	}
 	
@@ -225,16 +228,15 @@ public class WindowManagerScreen extends Screen {
 		}
 		
 		WLCToplevel renderToplevel = null;
+		lastFocused = focused;
 		
 		if(!resizeMode) {
-			WLCToplevel lastFocus = focused;
-			
 			// Update focus to toplevel that has highest focus priority
 			focused = wlc.bridge.getMostRecentFocus();
 			wlc.bridge.focusSurface(focused);
 			
 			// Update selected toplevel in selector to currently focused toplevel, only if it changed
-			if(selector.selection() == null || focused != lastFocus) {
+			if(selector.selection() == null || focused != lastFocused) {
 				selector.select(focused);
 			}
 			
@@ -373,7 +375,7 @@ public class WindowManagerScreen extends Screen {
 		
 		HoveredSurface hovered = surfaceUnderPointer(x, y);
 		
-		if(hovered != null) wlc.bridge.sendMotion(hovered.surface, hovered.rx, hovered.ry);
+		if(hovered != null) wlc.bridge.sendMotionRefocus(hovered.surface, hovered.rx, hovered.ry);
 		else wlc.bridge.sendMotionOutside();
 	}
 	
@@ -388,7 +390,10 @@ public class WindowManagerScreen extends Screen {
 		
 		HoveredSurface hovered = surfaceUnderPointer(x, y);
 		if(hovered != null) {
-			wlc.pressButton(mouseButton);
+			if(!pressedMouseButtons.contains(mouseButton)) {
+				wlc.bridge.sendButton(0x110 + mouseButton, 1);
+				pressedMouseButtons.add(mouseButton);
+			}
 			return true;
 		}
 		
@@ -409,7 +414,10 @@ public class WindowManagerScreen extends Screen {
 		
 		HoveredSurface hovered = surfaceUnderPointer(x, y);
 		if(hovered != null) {
-			wlc.releaseButton(mouseButton);
+			if(pressedMouseButtons.contains(mouseButton)) {
+				wlc.bridge.sendButton(0x110 + mouseButton, 0);
+				pressedMouseButtons.remove(mouseButton);
+			}
 			return true;
 		}
 		
@@ -474,8 +482,9 @@ public class WindowManagerScreen extends Screen {
 	@Override
 	public void removed() {
 		if(resizeMode) exitResizeMode();
-		wlc.bridge.sendMotionOutside();
-		wlc.releaseHeldButtons();
+		for(int mouseButton : pressedMouseButtons) {
+			wlc.bridge.sendButton(mouseButton, 0);
+		}
 	}
 	
 	private void prepareToplevel(WLCToplevel toplevel) {
