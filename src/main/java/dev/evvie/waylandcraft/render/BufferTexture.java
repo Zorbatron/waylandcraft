@@ -1,4 +1,4 @@
-package dev.evvie.waylandcraft;
+package dev.evvie.waylandcraft.render;
 
 import java.nio.ByteBuffer;
 

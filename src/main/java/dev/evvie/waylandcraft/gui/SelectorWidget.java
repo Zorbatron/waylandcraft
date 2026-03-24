@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL33;
 
-import dev.evvie.waylandcraft.RenderUtils;
+import dev.evvie.waylandcraft.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;

@@ -2,11 +2,11 @@ package dev.evvie.waylandcraft.bridge;
 
 import org.jetbrains.annotations.Nullable;
 
-import dev.evvie.waylandcraft.BufferTexture;
-import dev.evvie.waylandcraft.BufferTexture.DmabufTexture;
-import dev.evvie.waylandcraft.BufferTexture.ShmBufferTexture;
-import dev.evvie.waylandcraft.BufferTexture.SinglePixelBufferTexture;
 import dev.evvie.waylandcraft.WaylandCraft;
+import dev.evvie.waylandcraft.render.BufferTexture;
+import dev.evvie.waylandcraft.render.BufferTexture.DmabufTexture;
+import dev.evvie.waylandcraft.render.BufferTexture.ShmBufferTexture;
+import dev.evvie.waylandcraft.render.BufferTexture.SinglePixelBufferTexture;
 
 public class WLCSurface {
 	

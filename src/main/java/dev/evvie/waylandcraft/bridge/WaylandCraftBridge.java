@@ -11,9 +11,9 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWNativeEGL;
 
-import dev.evvie.waylandcraft.BufferTexture.DmabufTexture;
-import dev.evvie.waylandcraft.WindowFramebuffer;
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow.SurfaceGeometry;
+import dev.evvie.waylandcraft.render.WindowFramebuffer;
+import dev.evvie.waylandcraft.render.BufferTexture.DmabufTexture;
 import net.minecraft.client.Minecraft;
 
 public class WaylandCraftBridge {

@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
+import dev.evvie.waylandcraft.render.RenderUtils;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
@@ -114,7 +115,7 @@ public class WindowDisplay {
 //		RenderUtils.drawCutoutColorlessQuad(camera, window.framebuffer.getTexture(), tr, br, bl, tl, new Vec2(1, 0), new Vec2(1, 1), new Vec2(0, 1), new Vec2(0, 0));
 		
 		Pose pose = RenderUtils.cameraTransformPose(camera);
-		VertexConsumer buffer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(WaylandCraftRenderTypes.window(window.framebuffer.getTexture()));
+		VertexConsumer buffer = Minecraft.getInstance().renderBuffers().bufferSource().getBuffer(RenderUtils.window(window.framebuffer.getTexture()));
 		Vector3f pos1 = pose.pose().transformPosition((float) tl.x, (float) tl.y, (float) tl.z, new Vector3f());
 		Vector3f pos2 = pose.pose().transformPosition((float) bl.x, (float) bl.y, (float) bl.z, new Vector3f());
 		Vector3f pos3 = pose.pose().transformPosition((float) br.x, (float) br.y, (float) br.z, new Vector3f());

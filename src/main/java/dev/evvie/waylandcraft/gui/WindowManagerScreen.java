@@ -10,9 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL33;
 
-import dev.evvie.waylandcraft.RenderUtils;
 import dev.evvie.waylandcraft.WaylandCraft;
-import dev.evvie.waylandcraft.WindowFramebuffer;
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
 import dev.evvie.waylandcraft.bridge.WLCPopup;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
@@ -21,6 +19,8 @@ import dev.evvie.waylandcraft.bridge.WaylandCraftBridge;
 import dev.evvie.waylandcraft.bridge.WaylandCraftBridge.Size;
 import dev.evvie.waylandcraft.grabs.WindowGrab;
 import dev.evvie.waylandcraft.mixin.IMouseHandlerMixin;
+import dev.evvie.waylandcraft.render.RenderUtils;
+import dev.evvie.waylandcraft.render.WindowFramebuffer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.gui.GuiGraphics;

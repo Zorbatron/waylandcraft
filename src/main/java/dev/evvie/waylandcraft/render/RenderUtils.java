@@ -1,6 +1,7 @@
-package dev.evvie.waylandcraft;
+package dev.evvie.waylandcraft.render;
 
 import java.io.IOException;
+import java.util.function.Function;
 
 import org.joml.Matrix4f;
 
@@ -12,13 +13,18 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Axis;
 
+import dev.evvie.waylandcraft.WaylandCraft;
 import net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback;
+import net.minecraft.Util;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 
@@ -27,7 +33,7 @@ public class RenderUtils {
 	private static ShaderInstance CUTOUT_NO_COLOR;
 	private static ShaderInstance RENDERTYPE_WINDOW;
 	
-	protected static void registerShaders(CoreShaderRegistrationCallback.RegistrationContext context) throws IOException {
+	public static void registerShaders(CoreShaderRegistrationCallback.RegistrationContext context) throws IOException {
 		context.register(new ResourceLocation(WaylandCraft.MOD_ID, "cutout_no_color"), DefaultVertexFormat.POSITION_TEX, shader -> {
 			CUTOUT_NO_COLOR = shader;
 		});
@@ -36,12 +42,52 @@ public class RenderUtils {
 		});
 	}
 	
-	public static ShaderInstance getCutoutNoColor() {
+	public static ShaderInstance getCutoutNoColorShader() {
 		return CUTOUT_NO_COLOR;
 	}
 	
-	public static ShaderInstance getRendertypeWindow() {
+	public static ShaderInstance getRendertypeWindowShader() {
 		return RENDERTYPE_WINDOW;
+	}
+	
+	public static RenderType window(int texture) {
+		return DummyRenderType.WINDOW.apply(texture);
+	}
+	
+	/* This whole subclass dummy is necessary to access the RenderType.CompositeState class */
+	private static class DummyRenderType extends RenderType {
+		
+		public DummyRenderType(String string, VertexFormat vertexFormat, Mode mode, int i, boolean bl, boolean bl2, Runnable runnable, Runnable runnable2) {
+			super(string, vertexFormat, mode, i, bl, bl2, runnable, runnable2);
+			throw new IllegalStateException("DummyRenderType constructor called");
+		}
+		
+		public static Function<Integer, RenderType> WINDOW = Util.memoize(DummyRenderType::window);
+		public static final RenderStateShard.ShaderStateShard RENDERTYPE_WINDOW = new RenderStateShard.ShaderStateShard(RenderUtils::getRendertypeWindowShader);
+		
+		private static RenderType window(int texture) {
+			RenderType.CompositeState compositeState = RenderType.CompositeState.builder()
+					.setShaderState(RENDERTYPE_WINDOW)
+					.setTextureState(new TextureIdShard(texture))
+					.setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+					.setOutputState(ITEM_ENTITY_TARGET)
+					.setLightmapState(NO_LIGHTMAP)
+					.setOverlayState(NO_OVERLAY)
+					.setWriteMaskState(RenderStateShard.COLOR_DEPTH_WRITE)
+					.createCompositeState(true);
+			return create("wlc_window", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, RenderType.TRANSIENT_BUFFER_SIZE, true, true, compositeState);
+		}
+		
+		private static class TextureIdShard extends RenderStateShard.EmptyTextureStateShard {
+			
+			public TextureIdShard(int texture) {
+				super(() -> {
+					RenderSystem.setShaderTexture(0, texture);
+				}, () -> {});
+			}
+			
+		}
+		
 	}
 	
 	public static void blitGUIUnscaled(GuiGraphics graphics, int tex, float x1, float y1, float x2, float y2) {

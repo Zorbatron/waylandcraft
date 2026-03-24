@@ -1,4 +1,4 @@
-package dev.evvie.waylandcraft;
+package dev.evvie.waylandcraft.render;
 
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
+import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.bridge.WLCToplevel;
 import dev.evvie.waylandcraft.bridge.WaylandCraftBridge.Size;
 import dev.evvie.waylandcraft.item.WindowItem;
@@ -68,7 +69,7 @@ public class WindowInHandRenderer {
 		poseStack.translate(-0.5, -0.5, 0);
 		
 		Pose pose = poseStack.last();
-		VertexConsumer buffer = source.getBuffer(WaylandCraftRenderTypes.window(toplevel.framebuffer.getTexture()));
+		VertexConsumer buffer = source.getBuffer(RenderUtils.window(toplevel.framebuffer.getTexture()));
 		Vector3f pos1 = pose.pose().transformPosition(0, 1, 0, new Vector3f());
 		Vector3f pos2 = pose.pose().transformPosition(0, 0, 0, new Vector3f());
 		Vector3f pos3 = pose.pose().transformPosition(1, 0, 0, new Vector3f());

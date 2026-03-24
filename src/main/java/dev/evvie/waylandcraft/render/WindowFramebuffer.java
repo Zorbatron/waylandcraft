@@ -1,4 +1,4 @@
-package dev.evvie.waylandcraft;
+package dev.evvie.waylandcraft.render;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL33;
 
+import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
 import dev.evvie.waylandcraft.bridge.WLCSurface.ViewportSource;

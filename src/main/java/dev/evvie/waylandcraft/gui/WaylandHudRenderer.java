@@ -4,12 +4,12 @@ import java.awt.Color;
 
 import org.lwjgl.opengl.GL33;
 
-import dev.evvie.waylandcraft.RenderUtils;
 import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.WaylandCraft.KeyboardCaptureMode;
-import dev.evvie.waylandcraft.WindowFramebuffer;
 import dev.evvie.waylandcraft.bridge.WLCToplevel;
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow.SurfaceGeometry;
+import dev.evvie.waylandcraft.render.RenderUtils;
+import dev.evvie.waylandcraft.render.WindowFramebuffer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;

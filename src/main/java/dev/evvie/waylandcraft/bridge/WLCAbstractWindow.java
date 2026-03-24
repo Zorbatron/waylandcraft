@@ -2,7 +2,7 @@ package dev.evvie.waylandcraft.bridge;
 
 import org.jetbrains.annotations.Nullable;
 
-import dev.evvie.waylandcraft.WindowFramebuffer;
+import dev.evvie.waylandcraft.render.WindowFramebuffer;
 
 public abstract class WLCAbstractWindow {
 	
