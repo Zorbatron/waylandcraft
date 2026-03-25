@@ -189,10 +189,9 @@ impl DmabufHandler for WLCState {
     fn dmabuf_imported(
         &mut self,
         _global: &DmabufGlobal,
-        dmabuf: Dmabuf,
+        _dmabuf: Dmabuf,
         notifier: ImportNotifier
     ) {
-        println!("DMABUF ATTACH: {:?}", dmabuf);
         let _ = notifier.successful::<WLCState>();
     }
 }

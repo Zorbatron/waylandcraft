@@ -514,8 +514,6 @@ fn try_attach_dmabuf(
     }
 
     let image = instance.egl.dmabuf_to_image(dmabuf);
-    println!("Got EGLImage: {:?}", image);
-
     unsafe {
         env.call_method_unchecked(
             obj,
