@@ -159,6 +159,9 @@ public class AppLauncherScreen extends Screen {
 			
 			context.disableScissor();
 			
+			int scrollerX = x + width + 8;
+			int scrollerY = y - 2;
+			int scrollerWidth = 6;
 			int scrollerHeight = height + 4;
 			
 			int scrollerSize = Math.round(height / (float) contentHeight * scrollerHeight);
@@ -169,8 +172,42 @@ public class AppLauncherScreen extends Screen {
 				scrollerPos = 0;
 			}
 			
-			context.blitSprite(SCROLLER_BACKGROUND_SPRITE, x + width + 8, y - 2, 6, scrollerHeight);
-			context.blitSprite(SCROLLER_SPRITE, x + width + 8, y - 2 + scrollerPos, 6, scrollerSize);
+			context.blitSprite(SCROLLER_BACKGROUND_SPRITE, scrollerX, scrollerY, scrollerWidth, scrollerHeight);
+			context.blitSprite(SCROLLER_SPRITE, scrollerX, scrollerY + scrollerPos, scrollerWidth, scrollerSize);
+		}
+		
+		@Override
+		public boolean mouseDragged(double mouseX, double mouseY, int button, double accumX, double accumY) {
+			int y = getY();
+			int height = getHeight();
+			
+			int scrollerY = y - 2;
+			int scrollerHeight = height + 4;
+			
+			scroll = (int) (((mouseY - scrollerY) / scrollerHeight) * contentHeight - height / 2);
+			if(scroll < 0) scroll = 0;
+			if(scroll > maxScroll) scroll = maxScroll;
+			
+			return true;
+		}
+		
+		@Override
+		public boolean mouseClicked(double mouseX, double mouseY, int button) {
+			int x = getX();
+			int y = getY();
+			int width = getWidth();
+			int height = getHeight();
+			
+			int scrollerX = x + width + 8;
+			int scrollerY = y - 2;
+			int scrollerWidth = 6;
+			int scrollerHeight = height + 4;
+			
+			if(mouseX >= scrollerX && mouseX <= scrollerX + scrollerWidth && mouseY >= scrollerY && mouseY <= scrollerY + scrollerHeight) {
+				return true;
+			}
+			
+			return super.mouseClicked(mouseX, mouseY, button);
 		}
 		
 		@Override
