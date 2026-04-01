@@ -164,6 +164,11 @@ public class AppLauncherScreen extends Screen {
 			int scrollerSize = Math.round(height / (float) contentHeight * scrollerHeight);
 			int scrollerPos = Math.round(scroll / (float) contentHeight * scrollerHeight);
 			
+			if(contentHeight <= height) {
+				scrollerSize = scrollerHeight;
+				scrollerPos = 0;
+			}
+			
 			context.blitSprite(SCROLLER_BACKGROUND_SPRITE, x + width + 8, y - 2, 6, scrollerHeight);
 			context.blitSprite(SCROLLER_SPRITE, x + width + 8, y - 2 + scrollerPos, 6, scrollerSize);
 		}
