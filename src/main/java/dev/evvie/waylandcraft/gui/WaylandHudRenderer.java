@@ -7,6 +7,7 @@ import org.lwjgl.opengl.GL33;
 
 import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.WaylandCraft.KeyboardCaptureMode;
+import dev.evvie.waylandcraft.bridge.IconSurface;
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow.SurfaceGeometry;
 import dev.evvie.waylandcraft.bridge.WLCToplevel;
 import dev.evvie.waylandcraft.desktop.DesktopEntry;
@@ -82,12 +83,13 @@ public class WaylandHudRenderer {
 			yoff += ystep;
 		}
 		
+		int guiScale = (int) Minecraft.getInstance().getWindow().getGuiScale();
+		
 		if(wlc.pinnedToplevel != null && !wlc.pinnedToplevel.isAlive()) wlc.pinnedToplevel = null;
 		if(wlc.pinnedToplevel != null) {
 			WindowFramebuffer buf = wlc.pinnedToplevel.framebuffer;
 			SurfaceGeometry geometry = wlc.pinnedToplevel.geometry;
 			
-			int guiScale = (int) Minecraft.getInstance().getWindow().getGuiScale();
 			float x = -buf.getXOff() - geometry.x();
 			float y = -buf.getYOff() - geometry.y();
 			float w = buf.getWidth();
@@ -97,6 +99,32 @@ public class WaylandHudRenderer {
 			y /= guiScale * 2;
 			w /= guiScale * 2;
 			h /= guiScale * 2;
+			
+			Vec3 tl = new Vec3(x, y, 0);
+			Vec3 bl = new Vec3(x, y + h, 0);
+			Vec3 br = new Vec3(x + w, y + h, 0);
+			Vec3 tr = new Vec3(x + w, y, 0);
+			GL33.glEnable(GL33.GL_BLEND);
+			RenderUtils.renderWindow(buf, false, context.pose().last(), tl, bl, br, tr, new Vec2(0, 0), new Vec2(0, 1), new Vec2(1, 1), new Vec2(1, 0));
+			GL33.glDisable(GL33.GL_BLEND);
+		}
+		
+		IconSurface dndIcon = wlc.bridge.dndIcon;
+		if(dndIcon != null && dndIcon.framebuffer != null) {
+			WindowFramebuffer buf = dndIcon.framebuffer;
+			
+			float x = -buf.getXOff();
+			float y = -buf.getYOff();
+			float w = buf.getWidth();
+			float h = buf.getHeight();
+			
+			x /= guiScale;
+			y /= guiScale;
+			w /= guiScale;
+			h /= guiScale;
+			
+			x += context.guiWidth() / 2;
+			y += context.guiHeight() / 2;
 			
 			Vec3 tl = new Vec3(x, y, 0);
 			Vec3 bl = new Vec3(x, y + h, 0);

@@ -1789,6 +1789,17 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_checkDndRequest<'l>(
 
 #[unsafe(no_mangle)]
 pub extern "system"
+fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_checkDndActive<'l>(
+    _env: JNIEnv<'l>,
+    _class: JClass<'l>,
+    ptr: jlong,
+) -> jboolean {
+    let instance = jptr_to_instance(ptr);
+    instance.state.data.dnd.is_some() as jboolean
+}
+
+#[unsafe(no_mangle)]
+pub extern "system"
 fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_dndCancel<'l>(
     _env: JNIEnv<'l>,
     _class: JClass<'l>,
@@ -1822,4 +1833,22 @@ fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_dndMotion<'l>(
     let instance = jptr_to_instance(ptr);
     let surface = jptr_to_wlsurface(handle);
     instance.state.data.dnd_motion(surface, x, y);
+}
+
+#[unsafe(no_mangle)]
+pub extern "system"
+fn Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_dndIcon<'l>(
+    _env: JNIEnv<'l>,
+    _class: JClass<'l>,
+    ptr: jlong,
+) -> jlong {
+    let instance = jptr_to_instance(ptr);
+    let dnd = match &instance.state.data.dnd {
+        Some(d) => d,
+        None => { return 0 }
+    };
+    match dnd.icon.as_ref() {
+        Some(icon) => insert_get_handle(&mut instance.bridge.surfaces, icon),
+        None => 0,
+    }
 }

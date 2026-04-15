@@ -8,7 +8,6 @@ import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL33;
 
 import dev.evvie.waylandcraft.WaylandCraft;
-import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
 import dev.evvie.waylandcraft.bridge.WLCSurface.ViewportSource;
 import net.minecraft.client.Minecraft;
@@ -24,7 +23,7 @@ public class WindowFramebuffer {
 	private static ResourceLocation SHADER_FRAG_OPAQUE_LOC = new ResourceLocation(WaylandCraft.MOD_ID, "shaders/window_opaque.fsh");
 	private static ResourceLocation SHADER_VERT_LOC = new ResourceLocation(WaylandCraft.MOD_ID, "shaders/window.vsh");
 	
-	public final WLCAbstractWindow window;
+	public final WLCSurface surfaceTree;
 	
 	private int tex;
 	
@@ -33,12 +32,12 @@ public class WindowFramebuffer {
 	private int xoff = -1;
 	private int yoff = -1;
 	
-	private WindowFramebuffer(WLCAbstractWindow window) {
-		this.window = window;
+	private WindowFramebuffer(WLCSurface surfaceTree) {
+		this.surfaceTree = surfaceTree;
 	}
 	
-	public static WindowFramebuffer renderWindow(WLCAbstractWindow window) {
-		WindowFramebuffer buf = new WindowFramebuffer(window);
+	public static WindowFramebuffer renderSurfaceTree(WLCSurface surfaceTree) {
+		WindowFramebuffer buf = new WindowFramebuffer(surfaceTree);
 		buf.init();
 		return buf;
 	}
@@ -55,7 +54,7 @@ public class WindowFramebuffer {
 		int maxX = 0;
 		int maxY = 0;
 		
-		for(WLCSurface surface = window.getSurfaceTree(); surface != null; surface = surface.getNextChild()) {
+		for(WLCSurface surface = surfaceTree; surface != null; surface = surface.getNextChild()) {
 			int sMinX = surface.xSubpos;
 			int sMinY = surface.ySubpos;
 			int sMaxX = sMinX + surface.width();
@@ -127,7 +126,7 @@ public class WindowFramebuffer {
 		int vao = GL33.glGenVertexArrays();
 		GL33.glBindVertexArray(vao);
 		
-		for(WLCSurface surface = window.getSurfaceTree(); surface != null; surface = surface.getNextChild()) {
+		for(WLCSurface surface = surfaceTree; surface != null; surface = surface.getNextChild()) {
 			renderSurface(surface, xoff + surface.xSubpos, yoff + surface.ySubpos);
 		}
 		

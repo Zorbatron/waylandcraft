@@ -35,6 +35,7 @@ pub struct WLCDataState {
 pub struct WLCDndEvent {
     pub start_serial: u32,
     pub source: WlDataSource,
+    pub icon: Option<WlSurface>,
     pub focus: Option<WlSurface>,
     pub mime: Option<String>,
     pub dropped: bool,
@@ -446,7 +447,7 @@ impl Dispatch<WlDataDevice, WLCDataDevice> for WLCState {
         _data_init: &mut DataInit<'_, Self>,
     ) {
         match request {
-            wl_data_device::Request::StartDrag { source, serial, .. } => {
+            wl_data_device::Request::StartDrag { source, serial, icon, .. } => {
                 let source = match &source {
                     Some(s) => s,
                     None => { return }
@@ -474,6 +475,7 @@ impl Dispatch<WlDataDevice, WLCDataDevice> for WLCState {
                 state.data.dnd = Some(WLCDndEvent {
                     start_serial: serial,
                     source: source.clone(),
+                    icon: icon.clone(),
                     focus: None,
                     mime: None,
                     dropped: false,

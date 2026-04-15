@@ -27,6 +27,8 @@ public class WaylandCraftBridge {
 	private ArrayList<WLCSurface> surfaces = new ArrayList<WLCSurface>();
 	private ArrayList<DmabufTexture> dmabufs = new ArrayList<DmabufTexture>();
 	
+	public IconSurface dndIcon = null;
+	
 	private LinkedList<WLCToplevel> focusOrder = new LinkedList<WLCToplevel>();
 	
 	private ArrayList<WLCToplevel> newToplevels = new ArrayList<WLCToplevel>();
@@ -251,6 +253,16 @@ public class WaylandCraftBridge {
 			updateGeometry(popup);
 		}
 		
+		long dndIconHandle = dndIcon(instance);
+		if(dndIconHandle == 0) dndIcon = null;
+		else dndIcon = new IconSurface(getOrCreateSurface(dndIconHandle));
+		
+		if(dndIcon != null) {
+			updateSurfaceData(instance, dndIcon.surface);
+			dndIcon.surface.visited = true;
+			dndIcon.render();
+		}
+		
 		// All surface trees have now been walked. Now delete all unvisited surfaces
 		deleteUnvisitedSurfaces();
 		
@@ -286,7 +298,7 @@ public class WaylandCraftBridge {
 		// Render windows
 		for(WLCAbstractWindow window : allWindows) {
 			if(window.framebuffer != null) window.framebuffer.freeTexture();
-			window.framebuffer = WindowFramebuffer.renderWindow(window);
+			window.framebuffer = WindowFramebuffer.renderSurfaceTree(window.getSurfaceTree());
 		}
 		
 		deleteNonExistingDmabufs(dmabufs(instance));
@@ -670,8 +682,10 @@ public class WaylandCraftBridge {
 	private static native boolean setKeymapFromStr(long instance, String keymap);
 	
 	private static native int[] checkDndRequest(long instance);
+	private static native boolean checkDndActive(long instance);
 	private static native void dndCancel(long instance);
 	private static native void dndDrop(long instance);
 	private static native void dndMotion(long instance, long surface, double x, double y);
+	private static native long dndIcon(long instance);
 	
 }
