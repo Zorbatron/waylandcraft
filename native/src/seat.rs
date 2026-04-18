@@ -94,6 +94,7 @@ pub struct WLCKeyboardData {
 type WLCKeyboard = Arc<Mutex<WLCKeyboardData>>;
 
 // Keyboard RMLVO keymap specifier
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Default)]
 pub struct RMLVO {
     pub rules: String,
@@ -147,6 +148,7 @@ fn create_keymap_file(keymap: &Keymap) -> SealedFile {
 }
 
 impl WLCSeatState {
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         let xkb_context = xkb::Context::new(xkb::CONTEXT_NO_FLAGS);
         let keymap = Keymap::new_from_names(
@@ -268,7 +270,7 @@ impl WLCSeatState {
         let pos: (i32, i32) = to_fixed2(x, y);
         self.for_all_pointers(|pointer, data| {
             // Pointer does not hold focus
-            if !data.focus.is_some() {
+            if data.focus.is_none() {
                 return;
             }
             // Pointer location did not change
@@ -285,7 +287,7 @@ impl WLCSeatState {
     // Emit relative movement on the surface with active pointer focus
     pub fn pointer_relative_motion(&self, dx: f64, dy: f64) {
         self.for_all_pointers(|_pointer, data| {
-            if !data.focus.is_some() {
+            if data.focus.is_none() {
                 return;
             }
             for relative_pointer in &data.relative_pointers {
@@ -305,7 +307,7 @@ impl WLCSeatState {
     pub fn pointer_button(&mut self, button: u32, state: ButtonState) -> u32 {
         let serial = new_serial();
         self.for_all_pointers(|pointer, data| {
-            if !data.focus.is_some() {
+            if data.focus.is_none() {
                 return;
             }
 
@@ -376,7 +378,7 @@ impl WLCSeatState {
             keyboard.enter(serial, &surface, pressed);
             data.focus = Some(surface.clone());
 
-            self.send_modifiers(&keyboard, serial);
+            self.send_modifiers(keyboard, serial);
         });
     }
 
@@ -403,7 +405,7 @@ impl WLCSeatState {
                 let pressed = self.serialize_pressed_keys();
                 keyboard.leave(serial, focus);
                 keyboard.enter(serial, focus, pressed);
-                self.send_modifiers(&keyboard, serial);
+                self.send_modifiers(keyboard, serial);
             }
         });
     }
@@ -464,7 +466,7 @@ impl WLCSeatState {
         self.for_all_keyboards(|keyboard, data| {
             if data.focus.is_some() {
                 keyboard.key(serial, get_time(), key - 8, state);
-                self.send_modifiers(&keyboard, serial);
+                self.send_modifiers(keyboard, serial);
             }
         });
     }
@@ -491,11 +493,9 @@ impl WLCSeatState {
                             lock.active = true;
                         }
                         locked = true;
-                    } else {
-                        if lock.active {
-                            lock.locked_pointer.unlocked();
-                            lock.active = false;
-                        }
+                    } else if lock.active {
+                        lock.locked_pointer.unlocked();
+                        lock.active = false;
                     }
                 }
             });
@@ -820,7 +820,7 @@ fn has_existing_constraint(
     surface: &WlSurface,
 ) -> bool {
     let mut err = false;
-    with_pointer_data(&pointer, |data| {
+    with_pointer_data(pointer, |data| {
         if data.lock.is_some() || data.confined.is_some() {
             err = true;
         }

@@ -86,6 +86,7 @@ pub struct EGLHelper {
 
 impl EGLHelper {
     #[allow(non_snake_case)]
+    #[allow(clippy::missing_transmute_annotations)]
     pub fn new(dpy: EGLDisplay, proc_addr_ptr: usize) -> Self {
         let glfwGetProcAddress: ProcAddrFn =
             unsafe { std::mem::transmute(proc_addr_ptr) };
@@ -203,15 +204,13 @@ impl EGLHelper {
 
         attribs.push(EGL_NONE);
 
-        let image = (self.eglCreateImage)(
+        (self.eglCreateImage)(
             self.display,
             EGL_NO_CONTEXT,
             EGL_LINUX_DMA_BUF_EXT as EGLenum,
             std::ptr::null_mut(),
             attribs.as_ptr(),
-        );
-
-        image
+        )
     }
 
     pub fn query_dmabuf_formats(&self) -> Vec<Format> {
@@ -303,6 +302,6 @@ impl EGLHelper {
         // Keep only modifiers that allow non-external access
         modifiers.retain(|_| !external_only.next().unwrap());
 
-        modifiers.into_iter().map(|m| Modifier::from(m)).collect()
+        modifiers.into_iter().map(Modifier::from).collect()
     }
 }

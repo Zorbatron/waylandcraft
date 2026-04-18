@@ -48,6 +48,7 @@ use smithay::{
 use std::ops::DerefMut;
 use std::path::PathBuf;
 
+#[allow(clippy::vec_box)]
 pub(crate) struct BridgeState {
     /* Handle collections */
     toplevels: Vec<Box<ToplevelSurface>>,
@@ -155,7 +156,7 @@ where
 
 // Get an element and return its handle
 // Element has to be in the list, otherwise this functions panics
-fn get_handle<T>(vec: &Vec<Box<T>>, elem: &T) -> jlong
+fn get_handle<T>(vec: &[Box<T>], elem: &T) -> jlong
 where
     T: Clone + PartialEq,
 {
@@ -176,7 +177,7 @@ where
 }
 
 // Get handles of all elements in the list
-fn get_all_handles<T>(vec: &mut Vec<Box<T>>) -> Vec<jlong>
+fn get_all_handles<T>(vec: &mut [Box<T>]) -> Vec<jlong>
 where
     T: Clone + PartialEq,
 {
@@ -433,10 +434,7 @@ enum BufferAttachResult {
 
 impl BufferAttachResult {
     fn not_managed(&self) -> bool {
-        match self {
-            Self::NotManaged => true,
-            _ => false,
-        }
+        matches!(self, Self::NotManaged)
     }
 }
 
@@ -625,16 +623,16 @@ pub extern "system" fn updateSurfaceData<'l>(
 
         if let Some(buf) = maybe_buf {
             // First try shm
-            let mut r = try_attach_shm(&mut env, &obj, &buf, &data);
+            let mut r = try_attach_shm(&mut env, &obj, buf, data);
 
             // If not managed by shm, try single pixel
             if r.not_managed() {
-                r = try_attach_single_pixel(&mut env, &obj, &buf, &data);
+                r = try_attach_single_pixel(&mut env, &obj, buf, data);
             }
 
             // If not managed by single pixel, try dmabuf
             if r.not_managed() {
-                r = try_attach_dmabuf(instance, &mut env, &obj, &buf, &data);
+                r = try_attach_dmabuf(instance, &mut env, &obj, buf, data);
             }
 
             let _ = r;
@@ -758,7 +756,7 @@ pub extern "system" fn popupParent<'l>(
         }
     }
 
-    return 0;
+    0
 }
 
 #[unsafe(export_name = "Java_dev_evvie_waylandcraft_bridge_WaylandCraftBridge_\
@@ -856,7 +854,7 @@ pub extern "system" fn updateSurfaceTree<'l>(
 
             // Set the WLCSurface parentHandle
             let parent_handle = if let Some(p) = parent {
-                insert_get_handle(&mut instance.bridge.surfaces, &p)
+                insert_get_handle(&mut instance.bridge.surfaces, p)
             } else {
                 0
             };
@@ -1122,11 +1120,11 @@ pub extern "system" fn keyboardFocus<'l>(
             });
         });
 
-    toplevel.map(|t| {
+    if let Some(t) = toplevel {
         t.with_pending_state(|state| {
             state.states.set(xdg_toplevel::State::Activated);
         })
-    });
+    }
 
     instance
         .state
@@ -1401,7 +1399,7 @@ pub extern "system" fn toplevelTitle<'l>(
     let toplevel = jptr_to_toplevel(handle);
     let surface = toplevel.wl_surface();
 
-    let title = with_states(&surface, |states| {
+    let title = with_states(surface, |states| {
         let attr_guard = states
             .data_map
             .get::<XdgToplevelSurfaceData>()
@@ -1428,7 +1426,7 @@ pub extern "system" fn toplevelAppID<'l>(
     let toplevel = jptr_to_toplevel(handle);
     let surface = toplevel.wl_surface();
 
-    let app_id = with_states(&surface, |states| {
+    let app_id = with_states(surface, |states| {
         let attr_guard = states
             .data_map
             .get::<XdgToplevelSurfaceData>()
@@ -1610,8 +1608,8 @@ fn raw_desktop_entry_to_java<'l>(
             JObject::null(),
         )
         .unwrap();
-    for i in 0..keywords.len() {
-        env.set_object_array_element(&kw_array, i as jsize, &keywords[i])
+    for (i, kw) in keywords.iter().enumerate() {
+        env.set_object_array_element(&kw_array, i as jsize, kw)
             .unwrap();
     }
 
@@ -1624,8 +1622,8 @@ fn raw_desktop_entry_to_java<'l>(
             JObject::null(),
         )
         .unwrap();
-    for i in 0..categories.len() {
-        env.set_object_array_element(&cat_array, i as jsize, &categories[i])
+    for (i, cat) in categories.iter().enumerate() {
+        env.set_object_array_element(&cat_array, i as jsize, cat)
             .unwrap();
     }
 
@@ -1704,8 +1702,8 @@ pub extern "system" fn loadDesktopEntries<'l>(
         )
         .unwrap();
 
-    for i in 0..entries.len() {
-        env.set_object_array_element(&array, i as jsize, &entries[i])
+    for (i, ent) in entries.iter().enumerate() {
+        env.set_object_array_element(&array, i as jsize, ent)
             .unwrap();
     }
 

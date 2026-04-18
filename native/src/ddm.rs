@@ -146,7 +146,7 @@ impl WLCDataState {
                     .unwrap();
 
                 device.data_offer(&offer);
-                with_source_data(&clipboard, |data| {
+                with_source_data(clipboard, |data| {
                     for m in data.mime.iter().cloned() {
                         offer.offer(m);
                     }
@@ -272,7 +272,7 @@ impl WLCDataState {
 
         // Send device motion events
         self.for_all_devices(|device, data| {
-            if !data.dnd_focus.is_some() {
+            if data.dnd_focus.is_none() {
                 return;
             }
             if data.last_dnd_motion == Some(pos) {
@@ -588,7 +588,7 @@ impl Dispatch<WlDataOffer, WLCDataOffer> for WLCState {
                         source_data.mime.clone()
                     });
 
-                    if !mime.iter().any(|m| *m == mime_type) {
+                    if !mime.contains(&mime_type) {
                         return;
                     }
 
@@ -647,8 +647,7 @@ impl Dispatch<WlDataOffer, WLCDataOffer> for WLCState {
                 } else {
                     actions
                         .iter()
-                        .filter(|a| *a != DndAction::Ask)
-                        .next()
+                        .find(|a| *a != DndAction::Ask)
                         .unwrap_or(DndAction::None)
                 };
 

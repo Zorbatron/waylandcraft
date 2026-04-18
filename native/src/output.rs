@@ -32,11 +32,11 @@ impl WLCOutput {
     }
 
     pub fn size(&self) -> Size<i32, Logical> {
-        self.size.clone()
+        self.size
     }
 
     pub fn bounds(&self) -> Size<i32, Logical> {
-        self.bounds.clone()
+        self.bounds
     }
 
     pub fn resize(&mut self, width: i32, height: i32) {

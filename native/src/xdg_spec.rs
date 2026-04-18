@@ -36,22 +36,23 @@ impl XDGSpecHelper {
     fn to_raw(&self, entry: &DesktopEntry) -> RawDesktopEntry {
         let icon = self.resolve_icon_path(entry);
         let mut visible = true;
-        if entry.hidden() || entry.no_display() {
-            visible = false;
-        } else if entry.only_show_in().is_some_and(|v| !v.is_empty()) {
+        if entry.hidden()
+            || entry.no_display()
+            || entry.only_show_in().is_some_and(|v| !v.is_empty())
+        {
             visible = false;
         }
 
         let keywords = entry
             .keywords(&self.locales)
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .iter_mut()
             .map(|k| k.to_mut().clone())
             .collect();
 
         let categories = entry
             .categories()
-            .unwrap_or(vec![])
+            .unwrap_or_default()
             .iter()
             .map(|c| (*c).into())
             .collect();
@@ -67,7 +68,7 @@ impl XDGSpecHelper {
             comment: entry.comment(&self.locales).map(|c| c.into_owned()),
             keywords,
             categories,
-            visible: visible,
+            visible,
             icon_path: icon.map(|p| p.into_os_string().into_string().unwrap()),
         }
     }
@@ -78,7 +79,7 @@ impl XDGSpecHelper {
     }
 
     pub fn get_raw_entries(&self) -> Vec<RawDesktopEntry> {
-        self.entries.iter().map(|e| self.to_raw(&e)).collect()
+        self.entries.iter().map(|e| self.to_raw(e)).collect()
     }
 
     fn resolve_icon_path(&self, entry: &DesktopEntry) -> Option<PathBuf> {
@@ -121,9 +122,9 @@ impl XDGSpecHelper {
     ) -> Option<()> {
         let entry = find_app_by_id(&self.entries, Ascii::new(&app_id))?;
         let exec = entry.exec()?;
-        let mut args = split_exec(&exec).ok()?;
+        let mut args = split_exec(exec).ok()?;
 
-        if args.len() < 1 {
+        if args.is_empty() {
             return None;
         }
 
@@ -138,9 +139,8 @@ fn split_exec(exec: &str) -> Result<Vec<String>, ()> {
     let parts = shlex::split(exec).ok_or(())?;
     let mut uparts = vec![];
     for part in parts {
-        match unpercent(&part)? {
-            Some(p) => uparts.push(p),
-            None => {}
+        if let Some(p) = unpercent(&part)? {
+            uparts.push(p);
         }
     }
     Ok(uparts)
