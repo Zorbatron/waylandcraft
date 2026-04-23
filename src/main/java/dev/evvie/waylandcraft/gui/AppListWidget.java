@@ -23,6 +23,8 @@ public class AppListWidget extends AbstractContainerWidget {
 	public static final int ELEMENT_WIDTH = 200 + 2;
 	public static final int ELEMENT_HEIGHT = 32 + 2;
 	
+	public static final int DEFAULT_WIDTH = ELEMENT_WIDTH + 8 + 6;
+	
 	private ArrayList<AppWidget> children = new ArrayList<AppWidget>();
 	private Consumer<DesktopEntry> launchAction;
 	
@@ -55,11 +57,18 @@ public class AppListWidget extends AbstractContainerWidget {
 		int y = getY();
 		y -= scroll;
 		
+		int width = ELEMENT_WIDTH;
 		for(int i = 0; i < children.size(); i++) {
 			AppWidget widget = children.get(i);
 			widget.setRectangle(ELEMENT_WIDTH, ELEMENT_HEIGHT, x + width / 2 - ELEMENT_WIDTH / 2, y + i * (ELEMENT_HEIGHT + SLOT_GAPS));
 		}
 		
+	}
+	
+	@Override
+	public void setSize(int width, int height) {
+		// HACK: Override width to add additional bounds for scrollbar
+		super.setSize(width + 8 + 6, height);
 	}
 	
 	private void scrollTo(AppWidget widget) {
@@ -102,7 +111,7 @@ public class AppListWidget extends AbstractContainerWidget {
 		
 		int x = getX();
 		int y = getY();
-		int width = getWidth();
+		int width = ELEMENT_WIDTH;
 		int height = getHeight();
 		
 		context.renderOutline(x - 1, y - 1, width + 2, height + 2, Color.black.getRGB());
@@ -152,7 +161,7 @@ public class AppListWidget extends AbstractContainerWidget {
 	public boolean mouseClicked(double mouseX, double mouseY, int button) {
 		int x = getX();
 		int y = getY();
-		int width = getWidth();
+		int width = ELEMENT_WIDTH;
 		int height = getHeight();
 		
 		int scrollerX = x + width + 8;
