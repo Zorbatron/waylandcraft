@@ -1,5 +1,7 @@
 package dev.evvie.waylandcraft.render.model;
 
+import java.util.Set;
+
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
@@ -41,6 +43,20 @@ public class WindowSpecialRenderer implements SpecialModelRenderer<ResourceLocat
 		
 		ResourceLocation icon = entry.getIcon();
 		return icon;
+	}
+	
+	@Override
+	public void getExtents(Set<Vector3f> set) {
+		/* I have no clue what coordinate space these are supposed to be but this seems to work I guess */
+		Pose pose = new PoseStack().last();
+		Vector3f pos1 = pose.pose().transformPosition(0, 1, 0, new Vector3f());
+		Vector3f pos2 = pose.pose().transformPosition(0, 0, 0, new Vector3f());
+		Vector3f pos3 = pose.pose().transformPosition(1, 0, 0, new Vector3f());
+		Vector3f pos4 = pose.pose().transformPosition(1, 1, 0, new Vector3f());
+		set.add(pos1);
+		set.add(pos2);
+		set.add(pos3);
+		set.add(pos4);
 	}
 	
 	private void renderIconItem(Pose pose, MultiBufferSource source, ResourceLocation tex, int light, int overlayCoords) {

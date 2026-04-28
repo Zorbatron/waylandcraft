@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import org.jetbrains.annotations.Nullable;
 
-import dev.evvie.waylandcraft.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,7 +12,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -165,14 +164,14 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 			Color color = dimColor ? Color.lightGray : Color.white;
 			Font font = Minecraft.getInstance().font;
 			
-			context.blitSprite(RenderType::guiTextured, SPRITES.get(active, selected), x, y, width, height);
+			context.blitSprite(RenderPipelines.GUI_TEXTURED, SPRITES.get(active, selected), x, y, width, height);
 			context.enableScissor(x + 2, y, x + width - 2, y + height);
 			
 			int xoff = x + 2;
 			int iconSize = height - 4;
 			
 			if(icon != null) {
-				RenderUtils.blit(context, icon, xoff, y + 2, iconSize, iconSize);
+//				RenderUtils.blit(context, icon, xoff, y + 2, iconSize, iconSize);
 				xoff += iconSize + 2;
 			}
 			

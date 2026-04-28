@@ -2,11 +2,9 @@ package dev.evvie.waylandcraft;
 
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3d;
-import org.joml.Matrix4fStack;
 import org.joml.Vector3d;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack.Pose;
+import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
@@ -109,14 +107,11 @@ public class WindowDisplay {
 		Vec3 br = bl.add(localX.scale(bufWidth));
 		Vec3 tr = tl.add(localX.scale(bufWidth));
 		
-		Pose pose = RenderUtils.cameraTransform(ctx.camera());
-		Matrix4fStack modelView = RenderSystem.getModelViewStack();
-		modelView.pushMatrix();
-		modelView.identity();
-		
-		RenderUtils.renderFramebuffer(window.framebuffer, true, pose, tl, bl, br, tr, new Vec2(0, 0), new Vec2(0, 1), new Vec2(1, 1), new Vec2(1, 0));
-		
-		modelView.popMatrix();
+		PoseStack poseStack = ctx.matrixStack();
+		poseStack.pushPose();
+		RenderUtils.cameraTransform(poseStack, ctx.camera());
+		RenderUtils.renderFramebuffer(window.framebuffer, true, poseStack.last(), tl, bl, br, tr, new Vec2(0, 0), new Vec2(0, 1), new Vec2(1, 1), new Vec2(1, 0));
+		poseStack.popPose();
 	}
 	
 	/* Transform absolute world coordinates to surface-local pixel coordinates relative to toplevel (0, 0)

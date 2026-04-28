@@ -5,7 +5,6 @@ import java.util.function.Consumer;
 
 import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.desktop.DesktopEntry;
-import dev.evvie.waylandcraft.render.RenderUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -46,8 +45,8 @@ public class AppWidget extends AbstractWidget {
 		int height = getHeight() - 2;
 		boolean selected = isFocused();
 		
-		RenderUtils.blit(context, SLOT_THINGY, x, y, width, height);
-		if(selected) RenderUtils.blit(context, SLOT_THINGY_SELECTED, x - 1, y - 1, width + 2, height + 2);
+		context.blit(SLOT_THINGY, x, y, x + width, y + height, 0.0f, 1.0f, 0.0f, 1.0f);
+		if(selected) context.blit(SLOT_THINGY_SELECTED, x - 1, y - 1, x + width + 1, y + height + 1, 0.0f, 1.0f, 0.0f, 1.0f);
 		
 		ResourceLocation icon = entry.getIcon();
 		int iconSize = icon != null ? height - 10 : 0;
@@ -56,13 +55,13 @@ public class AppWidget extends AbstractWidget {
 		if(isHoveredOrFocused()) text = text.withStyle(ChatFormatting.UNDERLINE);
 		
 		context.enableScissor(x + 4, y + 4, x + width - 4, y + height - 4);
-		if(icon != null) RenderUtils.blit(context, icon, x + 5, y + 5, iconSize, iconSize);
+		if(icon != null) context.blit(icon, x + 5, y + 5, x + 5 + iconSize, y + 5 + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
 		context.drawString(font, text, x + 5 + iconSize + 5, y + height / 2 - font.lineHeight / 2, Color.white.getRGB());
 		context.disableScissor();
 		
 		if(selected) {
 			context.renderOutline(x - 1, y - 1, width + 2, height + 2, Color.white.getRGB());
-			context.fill(x + 4, y + 4, x + width - 4, y + height - 4, 1, ARGB.color(64, Color.black.getRGB()));
+			context.fill(x + 4, y + 4, x + width - 4, y + height - 4, ARGB.color(64, Color.black.getRGB()));
 		}
 	}
 	

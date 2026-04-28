@@ -10,7 +10,7 @@ import com.mojang.blaze3d.textures.TextureFormat;
 public interface IGlTextureMixin {
 	
 	@Invoker("<init>")
-	static GlTexture createTexture(String name, TextureFormat textureFormat, int width, int height, int mipmapLevels, int id) {
+	static GlTexture createTexture(int usage, String string, TextureFormat textureFormat, int width, int height, int depthOrLayers, int mipLevels, int id) {
 		throw new AssertionError();
 	}
 	

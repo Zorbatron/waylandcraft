@@ -1,7 +1,12 @@
 #version 150
 
+layout(std140) uniform window_info {
+	mat4 transform;
+	float alphaBlend;
+};
+
 uniform sampler2D sampler;
-uniform float alphaBlend;
+
 in vec2 texCoord;
 
 out vec4 fragColor;

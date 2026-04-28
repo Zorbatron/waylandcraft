@@ -9,6 +9,9 @@ import org.lwjgl.system.JNI;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.textures.TextureFormat;
 
 import dev.evvie.waylandcraft.mixin.IGlTextureMixin;
@@ -22,14 +25,15 @@ public abstract class BufferTexture {
 	public final int width;
 	public final int height;
 	public final int format;
-	public final GlTexture glTexture;
+	public final GpuTextureView textureView;
 	
 	public BufferTexture(int width, int height, int format) {
 		this.width = width;
 		this.height = height;
 		this.format = format;
 		this.id = GlStateManager._genTexture();
-		this.glTexture = IGlTextureMixin.createTexture("buffertexture-" + this.hashCode(), TextureFormat.RGBA8, width, height, 1, id);
+		GlTexture glTexture = IGlTextureMixin.createTexture(GpuTexture.USAGE_COPY_DST | GpuTexture.USAGE_TEXTURE_BINDING, "buffertexture-" + this.hashCode(), TextureFormat.RGBA8, width, height, 1, 1, id);
+		this.textureView = RenderSystem.getDevice().createTextureView(glTexture);
 	}
 	
 	public void release() {

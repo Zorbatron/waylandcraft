@@ -40,7 +40,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -115,11 +114,11 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		
 		WorldRenderEvents.AFTER_ENTITIES.register(this::renderWorld);
 		ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
-		HudLayerRegistrationCallback.EVENT.register(hudRenderer::register);
 		ServerTickEvents.START_WORLD_TICK.register(itemManager::onServerTick);
 		ClientPlayConnectionEvents.JOIN.register(this::onClientJoin);
 		
 		WindowItemModel.register();
+		hudRenderer.register();
 	}
 	
 	/* Update bridge and clients. May be called at any state of the game, even outside of a level
@@ -196,7 +195,6 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 			else playerUsingWindowItem = false;
 		}
 		
-		Minecraft.getInstance().renderBuffers().bufferSource().endBatch(); // Finish any existing immediate render calls before rendering
 		displays.forEach((d) -> d.render(ctx));
 		
 		updateOutputSize(inWMScreen);

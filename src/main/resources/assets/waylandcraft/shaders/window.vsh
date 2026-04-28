@@ -1,6 +1,10 @@
 #version 150
 
-uniform mat4 transform;
+layout(std140) uniform window_info {
+	mat4 transform;
+	float alphaBlend;
+};
+
 in vec3 position;
 in vec2 uv;
 

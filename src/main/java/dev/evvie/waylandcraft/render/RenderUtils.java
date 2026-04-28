@@ -9,7 +9,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.math.Axis;
 
 import dev.evvie.waylandcraft.WaylandCraft;
 import net.minecraft.Util;
@@ -21,88 +20,73 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ARGB;
-import net.minecraft.util.TriState;
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 public class RenderUtils {
 	
-	/* Window Cutout */
-	private static final RenderPipeline WINDOW_CUTOUT_PIPELINE = RenderPipeline.builder(RenderPipelines.MATRICES_SNIPPET)
-			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_cutout"))
+	private static final RenderPipeline.Snippet WINDOW_PIPELINE_SNIPPET = RenderPipeline.builder(RenderPipelines.MATRICES_PROJECTION_SNIPPET)
 			.withVertexShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
 			.withFragmentShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
-			.withShaderDefine("ALPHA_CUTOUT")
 			.withSampler("Sampler0")
 			.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
+			.buildSnippet();
+	
+	private static final RenderPipeline WINDOW_CUTOUT_PIPELINE = RenderPipeline.builder(WINDOW_PIPELINE_SNIPPET)
+			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_cutout"))
+			.withShaderDefine("ALPHA_CUTOUT")
+			.build();
+	
+	private static final RenderPipeline WINDOW_TRANSLUCENT_PIPELINE = RenderPipeline.builder(WINDOW_PIPELINE_SNIPPET)
+			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_translucent"))
+			.withBlend(BlendFunction.TRANSLUCENT)
+			.build();
+	
+	private static final RenderPipeline WINDOW_CUTOUT_BACKGROUND_PIPELINE = RenderPipeline.builder(WINDOW_PIPELINE_SNIPPET)
+			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_cutout_background"))
+			.withShaderDefine("ALPHA_CUTOUT")
+			.withShaderDefine("NO_COLOR")
+			.build();
+	
+	private static final RenderPipeline WINDOW_TRANSLUCENT_BACKGROUND_PIPELINE = RenderPipeline.builder(WINDOW_PIPELINE_SNIPPET)
+			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_translucent_background"))
+			.withShaderDefine("NO_COLOR")
+			.withBlend(BlendFunction.TRANSLUCENT)
 			.build();
 	
 	public static final Function<ResourceLocation, RenderType> WINDOW_CUTOUT = Util.memoize(
 		(location) -> {
 			RenderType.CompositeState compositeState = RenderType.CompositeState.builder()
-					.setTextureState(new RenderStateShard.TextureStateShard(location, TriState.FALSE, false))
-					.createCompositeState(true);
-			return RenderType.create("window_cutout", RenderType.TRANSIENT_BUFFER_SIZE, true, true, WINDOW_CUTOUT_PIPELINE, compositeState);
+					.setTextureState(new RenderStateShard.TextureStateShard(location, false))
+					.createCompositeState(false);
+			return RenderType.create("window_cutout", RenderType.TRANSIENT_BUFFER_SIZE, false, true, WINDOW_CUTOUT_PIPELINE, compositeState);
 		}
 	);
-	
-	/* Window Translucent */
-	private static final RenderPipeline WINDOW_TRANSLUCENT_PIPELINE = RenderPipeline.builder(RenderPipelines.MATRICES_SNIPPET)
-			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_translucent"))
-			.withVertexShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
-			.withFragmentShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
-			.withSampler("Sampler0")
-			.withBlend(BlendFunction.TRANSLUCENT)
-			.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
-			.build();
 	
 	public static final Function<ResourceLocation, RenderType> WINDOW_TRANSLUCENT = Util.memoize(
 		(location) -> {
 			RenderType.CompositeState compositeState = RenderType.CompositeState.builder()
-					.setTextureState(new RenderStateShard.TextureStateShard(location, TriState.FALSE, false))
-					.createCompositeState(true);
-			return RenderType.create("window_translucent", RenderType.TRANSIENT_BUFFER_SIZE, true, true, WINDOW_TRANSLUCENT_PIPELINE, compositeState);
+					.setTextureState(new RenderStateShard.TextureStateShard(location, false))
+					.createCompositeState(false);
+			return RenderType.create("window_translucent", RenderType.TRANSIENT_BUFFER_SIZE, false, true, WINDOW_TRANSLUCENT_PIPELINE, compositeState);
 		}
 	);
-	
-	/* Window Cutout Background */
-	private static final RenderPipeline WINDOW_CUTOUT_BACKGROUND_PIPELINE = RenderPipeline.builder(RenderPipelines.MATRICES_SNIPPET)
-			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_cutout"))
-			.withVertexShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
-			.withFragmentShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
-			.withShaderDefine("ALPHA_CUTOUT")
-			.withShaderDefine("NO_COLOR")
-			.withSampler("Sampler0")
-			.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
-			.build();
 	
 	public static final Function<ResourceLocation, RenderType> WINDOW_BACKGROUND_CUTOUT = Util.memoize(
 		(location) -> {
 			RenderType.CompositeState compositeState = RenderType.CompositeState.builder()
-					.setTextureState(new RenderStateShard.TextureStateShard(location, TriState.FALSE, false))
-					.createCompositeState(true);
-			return RenderType.create("window_cutout", RenderType.TRANSIENT_BUFFER_SIZE, true, true, WINDOW_CUTOUT_BACKGROUND_PIPELINE, compositeState);
+					.setTextureState(new RenderStateShard.TextureStateShard(location, false))
+					.createCompositeState(false);
+			return RenderType.create("window_cutout_background", RenderType.TRANSIENT_BUFFER_SIZE, false, true, WINDOW_CUTOUT_BACKGROUND_PIPELINE, compositeState);
 		}
 	);
-	
-	/* Window Translucent Background */
-	private static final RenderPipeline WINDOW_TRANSLUCENT_BACKGROUND_PIPELINE = RenderPipeline.builder(RenderPipelines.MATRICES_SNIPPET)
-			.withLocation(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "pipeline/window_translucent"))
-			.withVertexShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
-			.withFragmentShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "core/rendertype_window"))
-			.withSampler("Sampler0")
-			.withShaderDefine("NO_COLOR")
-			.withBlend(BlendFunction.TRANSLUCENT)
-			.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
-			.build();
 	
 	public static final Function<ResourceLocation, RenderType> WINDOW_BACKGROUND_TRANSLUCENT = Util.memoize(
 		(location) -> {
 			RenderType.CompositeState compositeState = RenderType.CompositeState.builder()
-					.setTextureState(new RenderStateShard.TextureStateShard(location, TriState.FALSE, false))
-					.createCompositeState(true);
-			return RenderType.create("window_translucent", RenderType.TRANSIENT_BUFFER_SIZE, true, true, WINDOW_TRANSLUCENT_BACKGROUND_PIPELINE, compositeState);
+					.setTextureState(new RenderStateShard.TextureStateShard(location, false))
+					.createCompositeState(false);
+			return RenderType.create("window_translucent_background", RenderType.TRANSIENT_BUFFER_SIZE, false, true, WINDOW_TRANSLUCENT_BACKGROUND_PIPELINE, compositeState);
 		}
 	);
 	
@@ -118,7 +102,6 @@ public class RenderUtils {
 		buffer.addVertex(pose, pos2.toVector3f()).setUv(uv2.x, uv2.y);
 		buffer.addVertex(pose, pos3.toVector3f()).setUv(uv3.x, uv3.y);
 		buffer.addVertex(pose, pos4.toVector3f()).setUv(uv4.x, uv4.y);
-		source.endBatch();
 		
 		// Back quad
 		renderType = cutout ? WINDOW_BACKGROUND_CUTOUT : WINDOW_BACKGROUND_TRANSLUCENT;
@@ -127,25 +110,29 @@ public class RenderUtils {
 		buffer.addVertex(pose, pos3.toVector3f()).setUv(uv3.x, uv3.y);
 		buffer.addVertex(pose, pos2.toVector3f()).setUv(uv2.x, uv2.y);
 		buffer.addVertex(pose, pos1.toVector3f()).setUv(uv1.x, uv1.y);
-		source.endBatch();
 	}
 	
-	public static Pose cameraTransform(Camera camera) {
-		PoseStack poseStack = new PoseStack();
-		poseStack.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-		poseStack.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
-		poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
-		return poseStack.last();
-	}
-	
-	public static void blit(GuiGraphics context, ResourceLocation location, float x, float y, float width, float height) {
-		Pose pose = context.pose().last();
+	public static void renderFramebuffer2D(GuiGraphics context, WindowFramebuffer framebuffer, int x, int y, int w, int h) {
+		if(!framebuffer.isValid()) return;
+		
+		context.blit(framebuffer.getTextureLocation(), x, y, x + w, y + h, 0.0f, 1.0f, 0.0f, 1.0f);
+		
+		/*
+		Matrix3x2f matrix = context.pose();
 		BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
-		VertexConsumer buffer = source.getBuffer(RenderType.guiTextured(location));
-		buffer.addVertex(pose, x        , y         , 0).setUv(0, 0).setColor(ARGB.white(1.0f));
-		buffer.addVertex(pose, x        , y + height, 0).setUv(0, 1).setColor(ARGB.white(1.0f));
-		buffer.addVertex(pose, x + width, y + height, 0).setUv(1, 1).setColor(ARGB.white(1.0f));
-		buffer.addVertex(pose, x + width, y         , 0).setUv(1, 0).setColor(ARGB.white(1.0f));
+		Function<ResourceLocation, RenderType> renderType = WINDOW_TRANSLUCENT;
+		VertexConsumer buffer = source.getBuffer(renderType.apply(framebuffer.getTextureLocation()));
+		buffer.addVertexWith2DPose(matrix, (float) pos1.x, (float) pos1.y, (float) pos1.z).setUv(uv1.x, uv1.y);
+		buffer.addVertexWith2DPose(matrix, (float) pos2.x, (float) pos2.y, (float) pos2.z).setUv(uv2.x, uv2.y);
+		buffer.addVertexWith2DPose(matrix, (float) pos3.x, (float) pos3.y, (float) pos3.z).setUv(uv3.x, uv3.y);
+		buffer.addVertexWith2DPose(matrix, (float) pos4.x, (float) pos4.y, (float) pos4.z).setUv(uv4.x, uv4.y);
+		*/
+	}
+	
+	public static void cameraTransform(PoseStack poseStack, Camera camera) {
+//		poseStack.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
+//		poseStack.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
+		poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
 	}
 	
 }

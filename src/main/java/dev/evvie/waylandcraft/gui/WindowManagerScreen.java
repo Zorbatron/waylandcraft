@@ -7,9 +7,8 @@ import java.util.HashSet;
 import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
 import org.lwjgl.glfw.GLFW;
-
-import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.bridge.WLCAbstractWindow;
@@ -32,8 +31,6 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
 
 public class WindowManagerScreen extends Screen {
 	
@@ -221,7 +218,7 @@ public class WindowManagerScreen extends Screen {
 	
 	@Override
 	public void render(GuiGraphics context, int i, int j, float f) {
-		super.renderBlurredBackground();
+		super.renderBlurredBackground(context);
 		
 		context.renderOutline(leftMargin - 1, topMargin - 1, areaWidth + 2, areaHeight + 2, Color.white.getRGB());
 		
@@ -267,30 +264,25 @@ public class WindowManagerScreen extends Screen {
 		windows.clear();
 		
 		float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
-		PoseStack poseStack = context.pose();
-		poseStack.pushPose();
-		poseStack.scale(1 / guiScale, 1 / guiScale, 1);
+		Matrix3x2fStack poseStack = context.pose();
+		poseStack.pushMatrix();
+		poseStack.scale(1 / guiScale, 1 / guiScale);
 		
 		if(renderToplevel != null) {
 			prepareToplevel(renderToplevel);
 			
 			for(WindowElement element : windows) {
 				WindowFramebuffer buf = element.window.framebuffer;
-				float x = element.x - buf.getXOff();
-				float y = element.y - buf.getYOff();
-				float w = buf.getWidth();
-				float h = buf.getHeight();
+				int x = (int) element.x - buf.getXOff();
+				int y = (int) element.y - buf.getYOff();
+				int w = buf.getWidth();
+				int h = buf.getHeight();
 				
-				Vec3 tl = new Vec3(x, y, 0);
-				Vec3 bl = new Vec3(x, y + h, 0);
-				Vec3 br = new Vec3(x + w, y + h, 0);
-				Vec3 tr = new Vec3(x + w, y, 0);
-				
-				RenderUtils.renderFramebuffer(buf, false, context.pose().last(), tl, bl, br, tr, new Vec2(0, 0), new Vec2(0, 1), new Vec2(1, 1), new Vec2(1, 0));
+				RenderUtils.renderFramebuffer2D(context, buf, x, y, w, h);
 			}
 		}
 		
-		poseStack.popPose();
+		poseStack.popMatrix();
 		
 		buttons.forEach((b) -> b.setFocused(false));
 		

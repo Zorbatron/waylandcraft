@@ -3,6 +3,8 @@ package dev.evvie.waylandcraft.gui;
 import java.awt.Color;
 import java.util.Calendar;
 
+import org.joml.Matrix3x2fStack;
+
 import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.WaylandCraft.KeyboardCaptureMode;
 import dev.evvie.waylandcraft.bridge.IconSurface;
@@ -11,8 +13,7 @@ import dev.evvie.waylandcraft.bridge.WLCToplevel;
 import dev.evvie.waylandcraft.desktop.DesktopEntry;
 import dev.evvie.waylandcraft.render.RenderUtils;
 import dev.evvie.waylandcraft.render.WindowFramebuffer;
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
-import net.fabricmc.fabric.api.client.rendering.v1.LayeredDrawerWrapper;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -21,8 +22,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec2;
-import net.minecraft.world.phys.Vec3;
 
 public class WaylandHudRenderer {
 	
@@ -36,11 +35,11 @@ public class WaylandHudRenderer {
 		this.wlc = wlc;
 	}
 	
-	public void register(LayeredDrawerWrapper wrapper) {
-		wrapper.attachLayerAfter(IdentifiedLayer.CHAT, TIME_DATE, this::renderTimeDate);
-		wrapper.attachLayerAfter(IdentifiedLayer.CHAT, APP_LIST, this::renderAppList);
-		wrapper.attachLayerAfter(IdentifiedLayer.CHAT, PINNED_TOPLEVEL, this::renderPinnedToplevel);
-		wrapper.attachLayerAfter(IdentifiedLayer.CHAT, DND_ICON, this::renderDNDIcon);
+	public void register() {
+		HudElementRegistry.addLast(TIME_DATE, this::renderTimeDate);
+		HudElementRegistry.addLast(APP_LIST, this::renderAppList);
+		HudElementRegistry.addLast(PINNED_TOPLEVEL, this::renderPinnedToplevel);
+		HudElementRegistry.addLast(DND_ICON, this::renderDNDIcon);
 	}
 	
 	private void renderAppList(GuiGraphics context, DeltaTracker deltaTracker) {
@@ -85,7 +84,7 @@ public class WaylandHudRenderer {
 				int iconX = x - font.lineHeight - 2;
 				int iconY = yoff;
 				int iconSize = font.lineHeight;
-				if(icon != null) RenderUtils.blit(context, icon, iconX, iconY, iconSize, iconSize);
+				if(icon != null) context.blit(icon, iconX, iconY, iconX + iconSize, iconY + iconSize, 0.0f, 1.0f, 0.0f, 1.0f);
 			}
 			
 			yoff += ystep;
@@ -100,22 +99,16 @@ public class WaylandHudRenderer {
 			WindowFramebuffer buf = wlc.pinnedToplevel.framebuffer;
 			SurfaceGeometry geometry = wlc.pinnedToplevel.geometry;
 			
-			float x = -buf.getXOff() - geometry.x();
-			float y = -buf.getYOff() - geometry.y();
-			float w = buf.getWidth();
-			float h = buf.getHeight();
+			int x = -buf.getXOff() - geometry.x();
+			int y = -buf.getYOff() - geometry.y();
+			int w = buf.getWidth();
+			int h = buf.getHeight();
 			
-			x /= guiScale * 2;
-			y /= guiScale * 2;
-			w /= guiScale * 2;
-			h /= guiScale * 2;
-			
-			Vec3 tl = new Vec3(x, y, 0);
-			Vec3 bl = new Vec3(x, y + h, 0);
-			Vec3 br = new Vec3(x + w, y + h, 0);
-			Vec3 tr = new Vec3(x + w, y, 0);
-			
-			RenderUtils.renderFramebuffer(buf, false, context.pose().last(), tl, bl, br, tr, new Vec2(0, 0), new Vec2(0, 1), new Vec2(1, 1), new Vec2(1, 0));
+			Matrix3x2fStack stack = context.pose();
+			stack.pushMatrix();
+			stack.scale(1.0f / guiScale * 0.5f, 1.0f / guiScale * 0.5f);
+			RenderUtils.renderFramebuffer2D(context, buf, x, y, w, h);
+			stack.popMatrix();
 		}
 	}
 	
@@ -126,25 +119,17 @@ public class WaylandHudRenderer {
 		if(dndIcon != null && dndIcon.framebuffer != null) {
 			WindowFramebuffer buf = dndIcon.framebuffer;
 			
-			float x = -buf.getXOff();
-			float y = -buf.getYOff();
-			float w = buf.getWidth();
-			float h = buf.getHeight();
+			int x = -buf.getXOff();
+			int y = -buf.getYOff();
+			int w = buf.getWidth();
+			int h = buf.getHeight();
 			
-			x /= guiScale;
-			y /= guiScale;
-			w /= guiScale;
-			h /= guiScale;
-			
-			x += context.guiWidth() / 2;
-			y += context.guiHeight() / 2;
-			
-			Vec3 tl = new Vec3(x, y, 0);
-			Vec3 bl = new Vec3(x, y + h, 0);
-			Vec3 br = new Vec3(x + w, y + h, 0);
-			Vec3 tr = new Vec3(x + w, y, 0);
-			
-			RenderUtils.renderFramebuffer(buf, false, context.pose().last(), tl, bl, br, tr, new Vec2(0, 0), new Vec2(0, 1), new Vec2(1, 1), new Vec2(1, 0));
+			Matrix3x2fStack stack = context.pose();
+			stack.pushMatrix();
+			stack.translate(context.guiWidth() / 2, context.guiHeight() / 2);
+			stack.scale(1.0f / guiScale, 1.0f / guiScale);
+			RenderUtils.renderFramebuffer2D(context, buf, x, y, w, h);
+			stack.popMatrix();
 		}
 	}
 	

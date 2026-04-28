@@ -3,9 +3,9 @@ package dev.evvie.waylandcraft.render;
 import java.util.ArrayList;
 import java.util.OptionalInt;
 
-import com.mojang.blaze3d.buffers.BufferType;
-import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.Std140Builder;
+import com.mojang.blaze3d.buffers.Std140SizeCalculator;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -16,7 +16,7 @@ import com.mojang.blaze3d.shaders.UniformType;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -28,6 +28,7 @@ import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.bridge.WLCSurface;
 import dev.evvie.waylandcraft.bridge.WLCSurface.ViewportSource;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MappableRingBuffer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
@@ -43,8 +44,7 @@ public class WindowFramebuffer {
 		.withFragmentShader(ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, "window"))
 		.withVertexFormat(DefaultVertexFormat.POSITION_TEX, VertexFormat.Mode.QUADS)
 		.withSampler("sampler")
-		.withUniform("transform", UniformType.MATRIX4X4)
-		.withUniform("alphaBlend", UniformType.FLOAT)
+		.withUniform("window_info", UniformType.UNIFORM_BUFFER)
 		.withBlend(new BlendFunction(SourceFactor.ONE, DestFactor.ONE_MINUS_SRC_ALPHA))
 		.withCull(false)
 		.build()
@@ -120,18 +120,31 @@ public class WindowFramebuffer {
 			if(draw != null) elements.add(draw.compile());
 		}
 		
-		try(RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(target.getColorTexture(), OptionalInt.of(0x00000000))) {
+		MappableRingBuffer alphaUniforms = new MappableRingBuffer(() -> "framebuffer uniforms", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, new Std140SizeCalculator().putMat4f().putFloat().get());
+		alphaUniforms.rotate();
+		try(GpuBuffer.MappedView view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(alphaUniforms.currentBuffer(), false, true)) {
+			Std140Builder.intoBuffer(view.data()).putMat4f(poseStack.last().pose()).putFloat(0.0f);
+		}
+		
+		MappableRingBuffer nonAlphaUniforms = new MappableRingBuffer(() -> "framebuffer uniforms", GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_MAP_WRITE, new Std140SizeCalculator().putMat4f().putFloat().get());
+		nonAlphaUniforms.rotate();
+		try(GpuBuffer.MappedView view = RenderSystem.getDevice().createCommandEncoder().mapBuffer(nonAlphaUniforms.currentBuffer(), false, true)) {
+			Std140Builder.intoBuffer(view.data()).putMat4f(poseStack.last().pose()).putFloat(1.0f);
+		}
+		
+		try(RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "window framebuffer", target.getColorTextureView(), OptionalInt.of(0x00000000))) {
 			pass.setPipeline(WINDOW_PIPELINE);
-			pass.setUniform("transform", poseStack.last().pose());
-			
 			for(CompiledBufferDraw element : elements) {
-				pass.bindSampler("sampler", element.texture);
-				pass.setUniform("alphaBlend", element.alpha ? 0.0f : 1.0f);
+				pass.setUniform("window_info", element.alpha ? alphaUniforms.currentBuffer() : nonAlphaUniforms.currentBuffer());
+				pass.bindSampler("sampler", element.textureView);
 				pass.setVertexBuffer(0, element.vertexBuffer);
 				pass.setIndexBuffer(element.indexBuffer, element.indexType);
-				pass.drawIndexed(0, element.indexCount);
+				pass.drawIndexed(0, 0, element.indexCount, 1);
 			}
 		}
+		
+		alphaUniforms.close();
+		nonAlphaUniforms.close();
 	}
 	
 	private BufferDraw bakeSurface(WLCSurface surface, float x, float y) {
@@ -154,13 +167,13 @@ public class WindowFramebuffer {
 			crop_y2 = (float) ((src.y + src.height) / buf.height);
 		}
 		
-		return new BufferDraw(buf.glTexture, x, y, w, h, crop_x1, crop_y1, crop_x2, crop_y2, buf.format != BufferTexture.FORMAT_XRGB8888);
+		return new BufferDraw(buf.textureView, x, y, w, h, crop_x1, crop_y1, crop_x2, crop_y2, buf.format != BufferTexture.FORMAT_XRGB8888);
 	}
 	
-	private static record CompiledBufferDraw(GpuTexture texture, GpuBuffer vertexBuffer, GpuBuffer indexBuffer, int indexCount, VertexFormat.IndexType indexType, boolean alpha) {
+	private static record CompiledBufferDraw(GpuTextureView textureView, GpuBuffer vertexBuffer, GpuBuffer indexBuffer, int indexCount, VertexFormat.IndexType indexType, boolean alpha) {
 	}
 	
-	private static record BufferDraw(GpuTexture texture, float x, float y, float w, float h, float u1, float v1, float u2, float v2, boolean alpha) {
+	private static record BufferDraw(GpuTextureView textureView, float x, float y, float w, float h, float u1, float v1, float u2, float v2, boolean alpha) {
 		
 		public CompiledBufferDraw compile() {
 			try(ByteBufferBuilder byteBuilder = new ByteBufferBuilder(DefaultVertexFormat.POSITION_TEX.getVertexSize() * 4)) {
@@ -173,9 +186,9 @@ public class WindowFramebuffer {
 				try(MeshData mesh = builder.buildOrThrow()) {
 					int indexCount = mesh.drawState().indexCount();
 					RenderSystem.AutoStorageIndexBuffer indices = RenderSystem.getSequentialBuffer(VertexFormat.Mode.QUADS);
-					GpuBuffer vertexBuffer = RenderSystem.getDevice().createBuffer(null, BufferType.VERTICES, BufferUsage.STATIC_WRITE, mesh.vertexBuffer());
+					GpuBuffer vertexBuffer = RenderSystem.getDevice().createBuffer(null, GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, mesh.vertexBuffer());
 					GpuBuffer indexBuffer = indices.getBuffer(indexCount);
-					return new CompiledBufferDraw(texture, vertexBuffer, indexBuffer, indexCount, indices.type(), alpha);
+					return new CompiledBufferDraw(textureView, vertexBuffer, indexBuffer, indexCount, indices.type(), alpha);
 				}
 			}
 		}
@@ -183,7 +196,9 @@ public class WindowFramebuffer {
 	}
 	
 	private void registerTexture() {
-		texture = new FramebufferTexture(getTexture());
+		if(target == null) return;
+		
+		texture = new FramebufferTexture(getTextureView());
 		location = ResourceLocation.fromNamespaceAndPath(WaylandCraft.MOD_ID, name());
 		
 		Minecraft.getInstance().getTextureManager().register(location, texture);
@@ -215,9 +230,9 @@ public class WindowFramebuffer {
 		return yoff;
 	}
 	
-	public GpuTexture getTexture() {
+	public GpuTextureView getTextureView() {
 		if(target == null) return null;
-		return target.getColorTexture();
+		return target.getColorTextureView();
 	}
 	
 	public ResourceLocation getTextureLocation() {
@@ -230,8 +245,9 @@ public class WindowFramebuffer {
 	
 	private static class FramebufferTexture extends AbstractTexture {
 		
-		public FramebufferTexture(GpuTexture texture) {
-			this.texture = texture;
+		public FramebufferTexture(GpuTextureView textureView) {
+			this.textureView = textureView;
+			this.texture = textureView.texture();
 		}
 		
 		@Override
