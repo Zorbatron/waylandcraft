@@ -13,15 +13,14 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.mixin.IGuiGraphics;
 import net.minecraft.Util;
-import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource.BufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.SubmitNodeCollector.CustomGeometryRenderer;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 
 public class RenderUtils {
@@ -100,26 +99,38 @@ public class RenderUtils {
 			.withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
 			.build();
 	
-	public static void renderFramebuffer(WindowFramebuffer framebuffer, boolean cutout, Pose pose, Vec3 pos1, Vec3 pos2, Vec3 pos3, Vec3 pos4, Vec2 uv1, Vec2 uv2, Vec2 uv3, Vec2 uv4) {
+	public static void renderFramebuffer(WindowFramebuffer framebuffer, PoseStack poseStack, SubmitNodeCollector collector, boolean cutout, Vec3 tl, Vec3 bl, Vec3 br, Vec3 tr) {
 		if(!framebuffer.isValid()) return;
 		
-		BufferSource source = Minecraft.getInstance().renderBuffers().bufferSource();
+		Function<ResourceLocation, RenderType> renderType;
 		
 		// Front quad
-		Function<ResourceLocation, RenderType> renderType = cutout ? WINDOW_CUTOUT : WINDOW_TRANSLUCENT;
-		VertexConsumer buffer = source.getBuffer(renderType.apply(framebuffer.getTextureLocation()));
-		buffer.addVertex(pose, pos1.toVector3f()).setUv(uv1.x, uv1.y);
-		buffer.addVertex(pose, pos2.toVector3f()).setUv(uv2.x, uv2.y);
-		buffer.addVertex(pose, pos3.toVector3f()).setUv(uv3.x, uv3.y);
-		buffer.addVertex(pose, pos4.toVector3f()).setUv(uv4.x, uv4.y);
+		renderType = cutout ? WINDOW_CUTOUT : WINDOW_TRANSLUCENT;
+		collector.submitCustomGeometry(poseStack, renderType.apply(framebuffer.getTextureLocation()), new FramebufferRenderInstance(tl, bl, br, tr, false));
 		
 		// Back quad
 		renderType = cutout ? WINDOW_BACKGROUND_CUTOUT : WINDOW_BACKGROUND_TRANSLUCENT;
-		buffer = source.getBuffer(renderType.apply(framebuffer.getTextureLocation()));
-		buffer.addVertex(pose, pos4.toVector3f()).setUv(uv4.x, uv4.y);
-		buffer.addVertex(pose, pos3.toVector3f()).setUv(uv3.x, uv3.y);
-		buffer.addVertex(pose, pos2.toVector3f()).setUv(uv2.x, uv2.y);
-		buffer.addVertex(pose, pos1.toVector3f()).setUv(uv1.x, uv1.y);
+		collector.submitCustomGeometry(poseStack, renderType.apply(framebuffer.getTextureLocation()), new FramebufferRenderInstance(tl, bl, br, tr, true));
+	}
+	
+	public static final record FramebufferRenderInstance(Vec3 tl, Vec3 bl, Vec3 br, Vec3 tr, boolean reverse) implements CustomGeometryRenderer {
+		
+		@Override
+		public void render(Pose pose, VertexConsumer buffer) {
+			if(!reverse) {
+				buffer.addVertex(pose, tl.toVector3f()).setUv(0.0f, 0.0f);
+				buffer.addVertex(pose, bl.toVector3f()).setUv(0.0f, 1.0f);
+				buffer.addVertex(pose, br.toVector3f()).setUv(1.0f, 1.0f);
+				buffer.addVertex(pose, tr.toVector3f()).setUv(1.0f, 0.0f);
+			}
+			else {
+				buffer.addVertex(pose, tr.toVector3f()).setUv(1.0f, 0.0f);
+				buffer.addVertex(pose, br.toVector3f()).setUv(1.0f, 1.0f);
+				buffer.addVertex(pose, bl.toVector3f()).setUv(0.0f, 1.0f);
+				buffer.addVertex(pose, tl.toVector3f()).setUv(0.0f, 0.0f);
+			}
+		}
+		
 	}
 	
 	public static void renderFramebuffer2D(GuiGraphics context, WindowFramebuffer framebuffer, int x, int y, int w, int h) {
@@ -127,10 +138,8 @@ public class RenderUtils {
 		((IGuiGraphics) context).invokeInnerBlit(WINDOW_BLIT, framebuffer.getTextureLocation(), x, x + w, y, y + h, 0.0f, 1.0f, 0.0f, 1.0f, -1);
 	}
 	
-	public static void cameraTransform(PoseStack poseStack, Camera camera) {
-//		poseStack.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-//		poseStack.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
-		poseStack.translate(-camera.getPosition().x, -camera.getPosition().y, -camera.getPosition().z);
+	public static void cameraTransform(PoseStack poseStack, CameraRenderState camera) {
+		poseStack.translate(-camera.pos.x, -camera.pos.y, -camera.pos.z);
 	}
 	
 }

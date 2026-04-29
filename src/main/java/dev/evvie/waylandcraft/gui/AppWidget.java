@@ -11,7 +11,8 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.navigation.CommonInputs;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -60,7 +61,7 @@ public class AppWidget extends AbstractWidget {
 		context.disableScissor();
 		
 		if(selected) {
-			context.renderOutline(x - 1, y - 1, width + 2, height + 2, Color.white.getRGB());
+			context.submitOutline(x - 1, y - 1, width + 2, height + 2, Color.white.getRGB());
 			context.fill(x + 4, y + 4, x + width - 4, y + height - 4, ARGB.color(64, Color.black.getRGB()));
 		}
 	}
@@ -70,14 +71,14 @@ public class AppWidget extends AbstractWidget {
 	}
 	
 	@Override
-	public void onClick(double mouseX, double mouseY) {
+	public void onClick(MouseButtonEvent event, boolean doubleClick) {
 		launch();
 	}
 	
 	@Override
-	public boolean keyPressed(int key, int scancode, int modifiers) {
+	public boolean keyPressed(KeyEvent event) {
 		if(!visible || !active) return false;
-		if(!CommonInputs.selected(key)) return false;
+		if(!event.isSelection()) return false;
 		launch();
 		return true;
 	}

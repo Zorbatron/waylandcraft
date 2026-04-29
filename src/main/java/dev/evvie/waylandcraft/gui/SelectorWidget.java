@@ -12,6 +12,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -122,11 +123,11 @@ public abstract class SelectorWidget<T> extends AbstractWidget {
 	}
 	
 	@Override
-	public boolean mouseClicked(double x, double y, int mouseButton) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		if(!(this.active && this.visible)) return false;
 		
 		for(SelectorButton<T> b : buttons) {
-			if(b.mouseClicked(x, y, mouseButton)) return true;
+			if(b.mouseClicked(event, doubleClick)) return true;
 		}
 		
 		return false;

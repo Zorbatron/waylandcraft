@@ -4,13 +4,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
 import dev.evvie.waylandcraft.bridge.WLCToplevel;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.world.phys.Vec2;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.phys.Vec3;
 
 public class WindowInItemFrameRenderer {
 	
-	public void render(WLCToplevel toplevel, PoseStack poseStack, MultiBufferSource multiBufferSource) {
+	public void render(WLCToplevel toplevel, PoseStack poseStack, SubmitNodeCollector collector) {
 		if(toplevel.framebuffer == null) return;
 		
 		poseStack.pushPose();
@@ -40,17 +39,12 @@ public class WindowInItemFrameRenderer {
 		x += resolution / 2 - width / 2;
 		y += resolution / 2 - height / 2;
 		
-		Vec3 pos1 = new Vec3(x, y, 0);
-		Vec3 pos2 = new Vec3(x, y + h, 0);
-		Vec3 pos3 = new Vec3(x + w, y + h, 0);
-		Vec3 pos4 = new Vec3(x + w, y, 0);
+		Vec3 tl = new Vec3(x, y, 0);
+		Vec3 bl = new Vec3(x, y + h, 0);
+		Vec3 br = new Vec3(x + w, y + h, 0);
+		Vec3 tr = new Vec3(x + w, y, 0);
 		
-		Vec2 uv1 = new Vec2(0, 0);
-		Vec2 uv2 = new Vec2(0, 1);
-		Vec2 uv3 = new Vec2(1, 1);
-		Vec2 uv4 = new Vec2(1, 0);
-		
-		RenderUtils.renderFramebuffer(toplevel.framebuffer, true, poseStack.last(), pos1, pos2, pos3, pos4, uv1, uv2, uv3, uv4);
+		RenderUtils.renderFramebuffer(toplevel.framebuffer, poseStack, collector, true, tl, bl, br, tr);
 		
 		poseStack.popPose();
 	}

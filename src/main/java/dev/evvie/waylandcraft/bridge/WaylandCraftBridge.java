@@ -76,7 +76,7 @@ public class WaylandCraftBridge {
 	
 	public static WaylandCraftBridge start() {
 		long eglDisplay = GLFWNativeEGL.glfwGetEGLDisplay();
-		long eglConfig = GLFWNativeEGL.glfwGetEGLConfig(Minecraft.getInstance().getWindow().getWindow());
+		long eglConfig = GLFWNativeEGL.glfwGetEGLConfig(Minecraft.getInstance().getWindow().handle());
 		
 		if(eglDisplay == 0 || eglConfig == 0) {
 			throw new RuntimeException("Failed to get EGL display or config!");

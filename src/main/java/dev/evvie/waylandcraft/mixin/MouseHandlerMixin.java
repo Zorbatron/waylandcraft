@@ -8,13 +8,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import dev.evvie.waylandcraft.WaylandCraft;
 import net.minecraft.client.MouseHandler;
+import net.minecraft.client.input.MouseButtonInfo;
 
 @Mixin(MouseHandler.class)
 public class MouseHandlerMixin {
 	
-	@Inject(method = "onPress", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;set(Lcom/mojang/blaze3d/platform/InputConstants$Key;Z)V"), cancellable = true)
-	public void onPress(long windowHandle, int button, int action, int modifiers, CallbackInfo info) {
-		if(WaylandCraft.instance.onButtonPress(windowHandle, button, action, modifiers)) info.cancel();
+	@Inject(method = "onButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/KeyMapping;set(Lcom/mojang/blaze3d/platform/InputConstants$Key;Z)V"), cancellable = true)
+	public void onButton(long windowHandle, MouseButtonInfo buttonInfo, int action, CallbackInfo info) {
+		if(WaylandCraft.instance.onButtonPress(windowHandle, buttonInfo.button(), action, buttonInfo.modifiers())) info.cancel();
 	}
 	
 	@Inject(method = "onScroll", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;player:Lnet/minecraft/client/player/LocalPlayer;", ordinal = 1), cancellable = true)

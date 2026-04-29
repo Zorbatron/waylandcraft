@@ -13,7 +13,7 @@ import dev.evvie.waylandcraft.WaylandCraft;
 import dev.evvie.waylandcraft.item.WindowItem;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
@@ -31,7 +31,7 @@ public abstract class ItemInHandRendererMixin {
 		ItemStack itemStack,
 		float handHeight,
 		PoseStack poseStack,
-		MultiBufferSource multiBufferSource,
+		SubmitNodeCollector collector,
 		int light,
 		CallbackInfo info,
 		@Local LocalRef<HumanoidArm> humanoidArmRef
@@ -41,7 +41,7 @@ public abstract class ItemInHandRendererMixin {
 		
 		info.cancel();
 		
-		WaylandCraft.instance.windowInHandRenderer.render(poseStack, multiBufferSource, attack, handHeight, light, humanoidArmRef.get(), itemStack);
+		WaylandCraft.instance.windowInHandRenderer.render(poseStack, collector, attack, handHeight, light, humanoidArmRef.get(), itemStack);
 	}
 	
 }

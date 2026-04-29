@@ -40,8 +40,9 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldExtractionContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.Camera;
@@ -50,6 +51,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -57,7 +59,7 @@ import net.minecraft.world.phys.Vec3;
 public class WaylandCraft implements ModInitializer, ClientModInitializer {
 	public static final String MOD_ID = "waylandcraft";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	private static final String KEYBIND_CATEGORY = "key.categories." + MOD_ID;
+	private static final KeyMapping.Category KEYBIND_CATEGORY = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(MOD_ID, "keys"));
 	
 	public static WaylandCraft instance;
 	
@@ -113,6 +115,7 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		keyCaptureKeyboard = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.captureKeyboard", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, KEYBIND_CATEGORY));
 		
 		WorldRenderEvents.AFTER_ENTITIES.register(this::renderWorld);
+		WorldRenderEvents.END_EXTRACTION.register(this::updateWorld);
 		ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
 		ServerTickEvents.START_WORLD_TICK.register(itemManager::onServerTick);
 		ClientPlayConnectionEvents.JOIN.register(this::onClientJoin);
@@ -136,10 +139,13 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 		bridge.update();
 	}
 	
-	/* Called during level render. Used for everything relevant in-game. */
 	public void renderWorld(WorldRenderContext ctx) {
 		if(bridge == null) return;
 		
+		displays.forEach((d) -> d.render(ctx));
+	}
+	
+	public void updateWorld(WorldExtractionContext ctx) {
 		for(WLCPopup popup : bridge.getMappedPopups()) {
 			WLCAbstractWindow root = popup;
 			while((root = ((WLCPopup) root).getParent()) instanceof WLCPopup);
@@ -194,8 +200,6 @@ public class WaylandCraft implements ModInitializer, ClientModInitializer {
 			}
 			else playerUsingWindowItem = false;
 		}
-		
-		displays.forEach((d) -> d.render(ctx));
 		
 		updateOutputSize(inWMScreen);
 	}

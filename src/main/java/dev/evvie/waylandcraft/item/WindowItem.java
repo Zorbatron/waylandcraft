@@ -95,7 +95,7 @@ public class WindowItem extends Item {
 	
 	@Override
 	public void onUseTick(Level level, LivingEntity livingEntity, ItemStack itemStack, int i) {
-		if(!level.isClientSide) return;
+		if(!level.isClientSide()) return;
 		if(livingEntity != Minecraft.getInstance().player) return;
 		
 		WaylandCraft.instance.playerUsingWindowItem = true;

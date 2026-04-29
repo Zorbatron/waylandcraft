@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -82,12 +83,12 @@ public class CategorySelectorWidget extends AbstractWidget {
 	}
 	
 	@Override
-	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		for(int i = 0; i < entries.size(); i++) {
 			int bx = idxPosX(i);
 			int by = idxPosY(i);
 			
-			if(mouseX > bx && mouseY > by && mouseX < bx + elementSize && mouseY < by + elementSize) {
+			if(event.x() > bx && event.y() > by && event.x() < bx + elementSize && event.y() < by + elementSize) {
 				select(i);
 				return true;
 			}

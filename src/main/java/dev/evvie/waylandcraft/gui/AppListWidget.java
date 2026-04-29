@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractContainerWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -114,8 +115,8 @@ public class AppListWidget extends AbstractContainerWidget {
 		int width = ELEMENT_WIDTH;
 		int height = getHeight();
 		
-		context.renderOutline(x - 1, y - 1, width + 2, height + 2, Color.black.getRGB());
-		context.renderOutline(x - 2, y - 2, width + 4, height + 4, Color.black.getRGB());
+		context.submitOutline(x - 1, y - 1, width + 2, height + 2, Color.black.getRGB());
+		context.submitOutline(x - 2, y - 2, width + 4, height + 4, Color.black.getRGB());
 		
 		context.enableScissor(x, y, x + width, y + height);
 		
@@ -143,14 +144,14 @@ public class AppListWidget extends AbstractContainerWidget {
 	}
 	
 	@Override
-	public boolean mouseDragged(double mouseX, double mouseY, int button, double accumX, double accumY) {
+	public boolean mouseDragged(MouseButtonEvent event, double accumX, double accumY) {
 		int y = getY();
 		int height = getHeight();
 		
 		int scrollerY = y - 2;
 		int scrollerHeight = height + 4;
 		
-		scroll = (int) (((mouseY - scrollerY) / scrollerHeight) * contentHeight - height / 2);
+		scroll = (int) (((event.y() - scrollerY) / scrollerHeight) * contentHeight - height / 2);
 		if(scroll < 0) scroll = 0;
 		if(scroll > maxScroll) scroll = maxScroll;
 		
@@ -158,7 +159,7 @@ public class AppListWidget extends AbstractContainerWidget {
 	}
 	
 	@Override
-	public boolean mouseClicked(double mouseX, double mouseY, int button) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		int x = getX();
 		int y = getY();
 		int width = ELEMENT_WIDTH;
@@ -169,11 +170,11 @@ public class AppListWidget extends AbstractContainerWidget {
 		int scrollerWidth = 6;
 		int scrollerHeight = height + 4;
 		
-		if(mouseX >= scrollerX && mouseX <= scrollerX + scrollerWidth && mouseY >= scrollerY && mouseY <= scrollerY + scrollerHeight) {
+		if(event.x() >= scrollerX && event.x() <= scrollerX + scrollerWidth && event.y() >= scrollerY && event.y() <= scrollerY + scrollerHeight) {
 			return true;
 		}
 		
-		return super.mouseClicked(mouseX, mouseY, button);
+		return super.mouseClicked(event, doubleClick);
 	}
 	
 	@Override

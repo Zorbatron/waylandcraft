@@ -29,6 +29,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.SpriteIconButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -169,7 +171,7 @@ public class WindowManagerScreen extends Screen {
 		if(focused == null || focused.fullscreen) return;
 		
 		wlc.bridge.sendMotionOutside();
-		GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().handle(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		
 		resizeMode = true;
 		resizeToplevel = focused;
@@ -193,7 +195,7 @@ public class WindowManagerScreen extends Screen {
 	private void exitResizeMode() {
 		if(resizeToplevel != null && resizeToplevel.isAlive()) wlc.bridge.resizeToplevel(resizeToplevel, resizeWidth, resizeHeight);
 		
-		long window = Minecraft.getInstance().getWindow().getWindow();
+		long window = Minecraft.getInstance().getWindow().handle();
 		GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
 		
 		/* <HACK> */
@@ -220,7 +222,7 @@ public class WindowManagerScreen extends Screen {
 	public void render(GuiGraphics context, int i, int j, float f) {
 		super.renderBlurredBackground(context);
 		
-		context.renderOutline(leftMargin - 1, topMargin - 1, areaWidth + 2, areaHeight + 2, Color.white.getRGB());
+		context.submitOutline(leftMargin - 1, topMargin - 1, areaWidth + 2, areaHeight + 2, Color.white.getRGB());
 		
 		guiScale = (int) Minecraft.getInstance().getWindow().getGuiScale();
 		wlc.bridge.setOutputBounds(areaWidth * guiScale, areaHeight * guiScale);
@@ -408,22 +410,22 @@ public class WindowManagerScreen extends Screen {
 	}
 	
 	@Override
-	public boolean mouseClicked(double x, double y, int mouseButton) {
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		if(resizeMode) return true;
 		
-		if(super.mouseClicked(x, y, mouseButton)) return true;
+		if(super.mouseClicked(event, doubleClick)) return true;
 		
-		x *= guiScale;
-		y *= guiScale;
+		double x = event.x() * guiScale;
+		double y = event.y() * guiScale;
 		
 		HoveredSurface hovered = surfaceUnderPointer(x, y);
 		if(implicitGrab == null && hovered != null) {
 			implicitGrab = new ImplicitGrab(hovered.surface);
 		}
 		
-		if(implicitGrab != null && !implicitGrab.pressedMouseButtons.contains(mouseButton)) {
-			implicitGrab.pressedMouseButtons.add(mouseButton);
-			wlc.bridge.sendButton(0x110 + mouseButton, 1);
+		if(implicitGrab != null && !implicitGrab.pressedMouseButtons.contains(event.button())) {
+			implicitGrab.pressedMouseButtons.add(event.button());
+			wlc.bridge.sendButton(0x110 + event.button(), 1);
 			
 			return true;
 		}
@@ -432,20 +434,17 @@ public class WindowManagerScreen extends Screen {
 	}
 	
 	@Override
-	public boolean mouseReleased(double x, double y, int mouseButton) {
+	public boolean mouseReleased(MouseButtonEvent event) {
 		if(resizeMode) {
 			exitResizeMode();
 			return true;
 		}
 		
-		if(super.mouseReleased(x, y, mouseButton)) return true;
+		if(super.mouseReleased(event)) return true;
 		
-		x *= guiScale;
-		y *= guiScale;
-		
-		if(implicitGrab != null && implicitGrab.pressedMouseButtons.contains(mouseButton)) {
-			implicitGrab.pressedMouseButtons.remove(mouseButton);
-			wlc.bridge.sendButton(0x110 + mouseButton, 0);
+		if(implicitGrab != null && implicitGrab.pressedMouseButtons.contains(event.button())) {
+			implicitGrab.pressedMouseButtons.remove(event.button());
+			wlc.bridge.sendButton(0x110 + event.button(), 0);
 			
 			if(implicitGrab.pressedMouseButtons.isEmpty()) implicitGrab = null;
 			
@@ -456,8 +455,8 @@ public class WindowManagerScreen extends Screen {
 	}
 	
 	@Override
-	public boolean keyPressed(int key, int scancode, int modifiers) {
-		if(key == GLFW.GLFW_KEY_ESCAPE) {
+	public boolean keyPressed(KeyEvent event) {
+		if(event.key() == GLFW.GLFW_KEY_ESCAPE) {
 			this.onClose();
 			return true;
 		}
@@ -465,11 +464,11 @@ public class WindowManagerScreen extends Screen {
 		if(resizeMode) return true;
 		
 		// Forward key press to currently focused widget
-		if(getFocused() != null && getFocused().keyPressed(key, scancode, modifiers)) return true;
+		if(getFocused() != null && getFocused().keyPressed(event)) return true;
 		
 		// Forward key press to current window
 		if(focused != null) {
-			scancode = WaylandCraft.correctScancode(scancode);
+			int scancode = WaylandCraft.correctScancode(event.scancode());
 			wlc.bridge.pressKey(scancode);
 			return true;
 		}
@@ -478,13 +477,13 @@ public class WindowManagerScreen extends Screen {
 	}
 	
 	@Override
-	public boolean keyReleased(int key, int scancode, int modifiers) {
+	public boolean keyReleased(KeyEvent event) {
 		if(resizeMode) return true;
 		
-		if(super.keyReleased(key, scancode, modifiers)) return true;
+		if(super.keyReleased(event)) return true;
 		
 		if(focused != null) {
-			scancode = WaylandCraft.correctScancode(scancode);
+			int scancode = WaylandCraft.correctScancode(event.scancode());
 			wlc.bridge.releaseKey(scancode);
 			return true;
 		}
