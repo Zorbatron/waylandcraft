@@ -38,7 +38,7 @@ public class ResizeGrab extends PointerGrab {
 	}
 	
 	@Override
-	public void release() throws GrabDroppedException {
+	public void release(boolean force) throws GrabDroppedException {
 	}
 	
 	@Override

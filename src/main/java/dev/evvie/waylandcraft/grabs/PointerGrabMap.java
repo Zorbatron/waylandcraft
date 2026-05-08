@@ -112,7 +112,7 @@ public class PointerGrabMap {
 	public void release(int button) {
 		if(exclusiveGrab != null && exclusiveGrab.button == button) {
 			try {
-				exclusiveGrab.release();
+				exclusiveGrab.release(false);
 			} catch (GrabDroppedException e) {
 				// No handling necessary, grab always removed
 			}
@@ -145,7 +145,7 @@ public class PointerGrabMap {
 		if(exclusiveGrab == null) return;
 		
 		try {
-			exclusiveGrab.release();
+			exclusiveGrab.release(true);
 		} catch (GrabDroppedException e) {
 			// No handling necessary, grab always removed
 		}

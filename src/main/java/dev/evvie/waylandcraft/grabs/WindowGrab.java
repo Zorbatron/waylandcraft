@@ -24,7 +24,7 @@ public class WindowGrab extends PointerGrab {
 	}
 	
 	@Override
-	public void release() throws GrabDroppedException {
+	public void release(boolean force) throws GrabDroppedException {
 		this.checkValid();
 	}
 	
