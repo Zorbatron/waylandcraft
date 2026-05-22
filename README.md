@@ -13,6 +13,15 @@ Now available on [Modrinth](https://modrinth.com/mod/waylandcraft)!
 - xkbcommon library 1.11.0
 - xkbcommon tools (xkbcli)
 
+Additionally recommended:
+- Prism Launcher
+- Sodium
+
+## Important notes for installing / using!!!
+1. Do not use a Minecraft launcher packaged as a flatpak! You won't be able to use your apps.
+2. For nvidia: Set the `__GL_THREADED_OPTIMIZATIONS` environment variable to `0` in your launcher.
+3. If you have weird graphics glitches on nvidia, enable the "Improved Transparency" option in the video settings.
+
 ## Frequently Asked Questions
 ### How do I use this thing?
 Download the mod from the releases section, install Minecraft Fabric for 26.1.2 and drag the jar file in your mods folder.
@@ -42,17 +51,6 @@ the windows using your controller. Soooo, kinda.
 
 ### Does this work with shaders?
 The windows are rendered into the world by themselves (not like blocks or entities) so a lot of shaders will break the functionality.
-
-## Common issues
-### Crash with `GLFW error: EGL: Failed to clear current context`
-Try setting the environment variable `__GL_THREADED_OPTIMIZATIONS=0` in your launcher.
-
-### Weird graphical issues
-Some users reported success by setting the `Improved Transparency` option in the game settings to enabled.
-
-### Only minecraft launcher shows up in the applications
-Make sure you don't use a sandboxed version of the launcher, i.e. don't
-use the Flatpak, go with a natively installed version of it.
 
 ## Building and Running
 You need a Rust development environment and a Java 25 SDK.
